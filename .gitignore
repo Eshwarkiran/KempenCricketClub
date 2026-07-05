@@ -13,3 +13,6 @@ node_modules/
 npm-debug.log*
 # mount temp artifacts
 .fuse_hidden*
+
+#DB
+db/
