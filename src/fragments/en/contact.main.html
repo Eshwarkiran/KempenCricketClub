@@ -1,0 +1,53 @@
+<section class="page-hero">
+  <div class="wrap inner">
+    <span class="crumb"><a href="/">Home</a> / Contact</span>
+    <span class="eyebrow" style="display:block;margin-top:14px">Contact</span>
+    <h1>Get in touch</h1>
+    <p class="sub">Questions about joining, sponsoring, volunteering, or just curious about cricket? We'd love to hear from you — a real person reads every message.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="contact-grid">
+      <!-- left: routing + find us -->
+      <div class="reveal">
+        <span class="eyebrow">Who to reach</span>
+        <h2 class="big" style="font-size:30px">Point your message the right way</h2>
+        <p class="body" style="margin-bottom:8px">You can always email <a class="ulink" href="mailto:contact@kempencricket.be">contact@kempencricket.be</a> and we'll route it. If you'd rather go direct:</p>
+        <ul class="routes">
+          <li><div class="r">Joining &amp; membership</div><div class="who">Chirag (Secretary) — new players, registration, fees.<br><a class="ulink" href="mailto:secretary@kempencricket.be">secretary@kempencricket.be</a></div></li>
+          <li><div class="r">Sponsorship &amp; partnerships</div><div class="who">Eshwar (Chairman) — businesses, partners, press.<br><a class="ulink" href="mailto:chairman@kempencricket.be">chairman@kempencricket.be</a></div></li>
+          <li><div class="r">Payments &amp; finance</div><div class="who">Nagarjuna (Treasurer) — invoices, payment plans.<br><a class="ulink" href="mailto:treasurer@kempencricket.be">treasurer@kempencricket.be</a></div></li>
+          <li><div class="r">Volunteering &amp; coaching</div><div class="who">Use the form, or email contact@kempencricket.be.</div></li>
+        </ul>
+        <div class="findus">
+          <p><span class="k">Home ground / training</span><br>In and around Geel, at local facilities. Locations confirmed when you book a tryout.</p>
+          <p style="margin-top:12px"><span class="k">Registered office</span><br>Kempen Cricket Club VZW · Violetstraat 9, 2440 Geel</p>
+          <p style="margin-top:12px"><span class="k">Email</span><br><a class="ulink" href="mailto:contact@kempencricket.be">contact@kempencricket.be</a></p>
+          <p style="margin-top:12px"><span class="k">Region served</span><br>Geel, Mol, Balen, Westerlo, Olen, Kasterlee, Herentals, Laakdal, Meerhout, Tessenderlo and the wider Kempen.</p>
+        </div>
+        <div class="map-embed">
+          <iframe title="Map of Geel" src="https://www.openstreetmap.org/export/embed.html?bbox=4.94%2C51.14%2C5.04%2C51.20&amp;layer=mapnik&amp;marker=51.166%2C4.990" loading="lazy"></iframe>
+        </div>
+      </div>
+
+      <!-- right: form -->
+      <div class="reveal">
+        <span class="eyebrow">Send a message</span>
+        <h2 class="big" style="font-size:30px">Tell us what you need</h2>
+        <form class="form" data-endpoint="/api/contact">
+          <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" style="display:none">
+          <div class="field"><label>Your name *</label><input type="text" name="name" required></div>
+          <div class="field"><label>Email *</label><input type="email" name="email" required></div>
+          <div class="field"><label>What's this about?</label>
+            <select name="topic"><option>Joining</option><option>Sponsorship</option><option>Volunteering</option><option>Press</option><option>Something else</option></select>
+          </div>
+          <div class="field"><label>Message *</label><textarea name="message" required></textarea></div>
+          <label class="check"><input type="checkbox" name="consent" required> I agree KCC may use these details to respond to me, per the privacy notice.</label>
+          <button class="btn btn--primary" type="submit">Send message</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>

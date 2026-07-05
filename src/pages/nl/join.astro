@@ -1,0 +1,9 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import main from '../../fragments/nl/join.main.html?raw';
+import scripts from '../../fragments/nl/join.scripts.html?raw';
+---
+<Layout lang="nl" path="/nl/join" title="Word lid \u2014 drie gratis sessies | Kempen Cricket Club" description="Probeer cricket in de Kempen met drie gratis sessies, zonder ervaring of materiaal. Bekijk hoe lid worden werkt en de lidgelden (volwassene \u20ac70, jeugd \u20ac50, steunend lid \u20ac25)." robots="index,follow">
+  <Fragment set:html={main} />
+  <Fragment slot="scripts" set:html={scripts} />
+</Layout>

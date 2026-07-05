@@ -1,0 +1,9 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import main from '../../fragments/nl/register.main.html?raw';
+import scripts from '../../fragments/nl/register.scripts.html?raw';
+---
+<Layout lang="nl" path="/nl/register" title="Ledeninschrijving | Kempen Cricket Club" description="Schrijf je in als lid van Kempen Cricket Club in Geel. Kies je categorie, vul je gegevens in en we bevestigen je bijdrage en betaling per e-mail." robots="noindex">
+  <Fragment set:html={main} />
+  <Fragment slot="scripts" set:html={scripts} />
+</Layout>

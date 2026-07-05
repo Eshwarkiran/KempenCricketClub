@@ -1,0 +1,9 @@
+---
+import Layout from '../layouts/Layout.astro';
+import main from '../fragments/en/learn-cricket.main.html?raw';
+import scripts from '../fragments/en/learn-cricket.scripts.html?raw';
+---
+<Layout lang="en" path="/learn-cricket" title="Learn cricket in plain language | Kempen Cricket Club" description="New to cricket? Understand the whole game in a few minutes \u2014 runs, overs, dismissals and formats explained simply. Then test yourself with Gully, our four-tier quiz." robots="index,follow">
+  <Fragment set:html={main} />
+  <Fragment slot="scripts" set:html={scripts} />
+</Layout>

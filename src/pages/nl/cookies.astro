@@ -1,0 +1,9 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import main from '../../fragments/nl/cookies.main.html?raw';
+import scripts from '../../fragments/nl/cookies.scripts.html?raw';
+---
+<Layout lang="nl" path="/nl/cookies" title="Cookiebeleid | Kempen Cricket Club" description="Welke cookies de website van Kempen Cricket Club gebruikt, waarom, en hoe je ze beheert." robots="index,follow">
+  <Fragment set:html={main} />
+  <Fragment slot="scripts" set:html={scripts} />
+</Layout>

@@ -1,0 +1,12 @@
+{
+  "name": "kcc-api",
+  "version": "1.0.0",
+  "description": "Kempen Cricket Club form APIs (Azure Functions v4)",
+  "main": "src/functions/*.js",
+  "engines": { "node": ">=18" },
+  "scripts": { "start": "func start" },
+  "dependencies": {
+    "@azure/functions": "^4.5.0",
+    "mssql": "^11.0.1"
+  }
+}

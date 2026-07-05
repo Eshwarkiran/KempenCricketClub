@@ -1,0 +1,9 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import main from '../../fragments/nl/thank-you.main.html?raw';
+import scripts from '../../fragments/nl/thank-you.scripts.html?raw';
+---
+<Layout lang="nl" path="/nl/thank-you" title="Bedankt | Kempen Cricket Club" description="Bedankt om contact op te nemen met Kempen Cricket Club \u2014 dit gebeurt er nu." robots="noindex,follow">
+  <Fragment set:html={main} />
+  <Fragment slot="scripts" set:html={scripts} />
+</Layout>

@@ -1,0 +1,9 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import main from '../../fragments/nl/faq.main.html?raw';
+import scripts from '../../fragments/nl/faq.scripts.html?raw';
+---
+<Layout lang="nl" path="/nl/faq" title="Veelgestelde vragen | Kempen Cricket Club" description="Antwoorden op de meest gestelde vragen over Kempen Cricket Club \u2014 proefsessies, lidgeld, leeftijden, trainingen, verzekering en meer." robots="index,follow">
+  <Fragment set:html={main} />
+  <Fragment slot="scripts" set:html={scripts} />
+</Layout>

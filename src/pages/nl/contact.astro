@@ -1,0 +1,9 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import main from '../../fragments/nl/contact.main.html?raw';
+import scripts from '../../fragments/nl/contact.scripts.html?raw';
+---
+<Layout lang="nl" path="/nl/contact" title="Contact | Kempen Cricket Club" description="Contacteer Kempen Cricket Club in Geel \u2014 lid worden, sponsoren, vrijwilligerswerk of gewoon een vraag over cricket in de Kempen." robots="index,follow">
+  <Fragment set:html={main} />
+  <Fragment slot="scripts" set:html={scripts} />
+</Layout>

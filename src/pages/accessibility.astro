@@ -1,0 +1,9 @@
+---
+import Layout from '../layouts/Layout.astro';
+import main from '../fragments/en/accessibility.main.html?raw';
+import scripts from '../fragments/en/accessibility.scripts.html?raw';
+---
+<Layout lang="en" path="/accessibility" title="Accessibility | Kempen Cricket Club" description="Kempen Cricket Club's commitment to a website that everyone can use, the steps we take, known limitations, and how to give feedback." robots="index,follow">
+  <Fragment set:html={main} />
+  <Fragment slot="scripts" set:html={scripts} />
+</Layout>

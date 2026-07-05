@@ -1,0 +1,9 @@
+---
+import Layout from '../layouts/Layout.astro';
+import main from '../fragments/en/code-of-conduct.main.html?raw';
+import scripts from '../fragments/en/code-of-conduct.scripts.html?raw';
+---
+<Layout lang="en" path="/code-of-conduct" title="House Rules &amp; Code of Conduct | Kempen Cricket Club" description="The Kempen Cricket Club House Rules and Code of Conduct \u2014 how we look after each other, our club, and the game. Every member agrees to them on joining." robots="index,follow">
+  <Fragment set:html={main} />
+  <Fragment slot="scripts" set:html={scripts} />
+</Layout>

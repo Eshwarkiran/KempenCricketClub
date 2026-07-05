@@ -1,0 +1,9 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import main from '../../fragments/nl/code-of-conduct.main.html?raw';
+import scripts from '../../fragments/nl/code-of-conduct.scripts.html?raw';
+---
+<Layout lang="nl" path="/nl/code-of-conduct" title="Huisregels &amp; Gedragscode | Kempen Cricket Club" description="De huisregels en gedragscode van Kempen Cricket Club \u2014 hoe we voor elkaar, onze club en het spel zorgen. Elk lid gaat ermee akkoord bij aansluiting." robots="index,follow">
+  <Fragment set:html={main} />
+  <Fragment slot="scripts" set:html={scripts} />
+</Layout>

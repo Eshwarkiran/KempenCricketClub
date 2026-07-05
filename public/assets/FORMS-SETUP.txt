@@ -1,0 +1,20 @@
+KCC website — how the forms work (Azure backend)
+================================================
+
+Forms do NOT use any third-party form service (no Web3Forms).
+
+They POST as JSON to Azure Functions endpoints:
+  contact   -> /api/contact
+  join      -> /api/join
+  register  -> /api/register
+  subscribe -> /api/subscribe   (footer "Stay in the loop" email signup,
+                                 on every page; payload: { email, lang })
+
+The client handler is /assets/forms.js. On success it redirects the
+visitor to the thank-you page (/thank-you or /nl/thank-you). Language is
+sent as a "lang" field in the payload.
+
+These endpoints are implemented as Azure Functions in the member
+management system — see 03 Website/KCC_Member_Management_System_Spec.md.
+Until those functions exist, submissions fail gracefully with a message
+asking the visitor to email the club.

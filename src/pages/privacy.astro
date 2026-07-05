@@ -1,0 +1,9 @@
+---
+import Layout from '../layouts/Layout.astro';
+import main from '../fragments/en/privacy.main.html?raw';
+import scripts from '../fragments/en/privacy.scripts.html?raw';
+---
+<Layout lang="en" path="/privacy" title="Privacy Policy | Kempen Cricket Club" description="How Kempen Cricket Club VZW collects, uses and protects your personal data, including the data of junior members, under the GDPR." robots="index,follow">
+  <Fragment set:html={main} />
+  <Fragment slot="scripts" set:html={scripts} />
+</Layout>

@@ -1,0 +1,15 @@
+# build output
+dist/
+# dependencies
+node_modules/
+# generated types
+.astro/
+# environment / secrets
+.env
+.env.production
+# macOS
+.DS_Store
+# logs
+npm-debug.log*
+# mount temp artifacts
+.fuse_hidden*

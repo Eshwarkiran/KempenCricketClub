@@ -1,0 +1,9 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import main from '../../fragments/nl/learn-cricket.main.html?raw';
+import scripts from '../../fragments/nl/learn-cricket.scripts.html?raw';
+---
+<Layout lang="nl" path="/nl/learn-cricket" title="Leer cricket in gewone taal | Kempen Cricket Club" description="Nieuw in cricket? Begrijp het hele spel in enkele minuten \u2014 runs, overs, dismissals en formats eenvoudig uitgelegd. Test jezelf daarna met Gully, onze quiz in vier niveaus." robots="index,follow">
+  <Fragment set:html={main} />
+  <Fragment slot="scripts" set:html={scripts} />
+</Layout>

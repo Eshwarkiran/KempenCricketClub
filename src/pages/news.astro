@@ -1,0 +1,9 @@
+---
+import Layout from '../layouts/Layout.astro';
+import main from '../fragments/en/news.main.html?raw';
+import scripts from '../fragments/en/news.scripts.html?raw';
+---
+<Layout lang="en" path="/news" title="Club news | Kempen Cricket Club" description="Updates, milestones and the story of cricket growing in the Kempen \u2014 from Kempen Cricket Club in Geel." robots="index,follow">
+  <Fragment set:html={main} />
+  <Fragment slot="scripts" set:html={scripts} />
+</Layout>

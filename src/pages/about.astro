@@ -1,0 +1,9 @@
+---
+import Layout from '../layouts/Layout.astro';
+import main from '../fragments/en/about.main.html?raw';
+import scripts from '../fragments/en/about.scripts.html?raw';
+---
+<Layout lang="en" path="/about" title="About \u2014 a home for cricket in the Kempen | Kempen Cricket Club" description="Kempen Cricket Club is a new non-profit cricket club in Geel, built for the whole Kempen. Our story, what we believe, and an honest account of where we are right now." robots="index,follow">
+  <Fragment set:html={main} />
+  <Fragment slot="scripts" set:html={scripts} />
+</Layout>

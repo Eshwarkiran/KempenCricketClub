@@ -1,0 +1,24 @@
+<script>
+(function(){
+  var dob=document.getElementById("dob");
+  var guardian=document.getElementById("guardian");
+  var guardianConsent=document.getElementById("guardianConsent");
+  if(!dob||!guardian) return;
+  var cats=document.querySelectorAll("input[name=\"category\"]");
+  function isMinor(){
+    var j=document.getElementById("cat-junior"); var junior=j&&j.checked; var underage=false;
+    if(dob.value){ var age=(Date.now()-new Date(dob.value))/(365.25*24*3600*1000); underage=age<18; }
+    return junior||underage;
+  }
+  function refresh(){
+    var show=isMinor();
+    guardian.style.display=show?"block":"none";
+    if(guardianConsent) guardianConsent.style.display=show?"flex":"none";
+    guardian.querySelectorAll("input").forEach(function(i){ if(i.name!=="guardianRel") i.required=show; });
+    var c4=document.getElementById("c4"); if(c4) c4.required=show;
+  }
+  dob.addEventListener("change",refresh);
+  cats.forEach(function(c){c.addEventListener("change",refresh);});
+  refresh();
+})();
+</script>

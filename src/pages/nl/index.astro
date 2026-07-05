@@ -1,0 +1,9 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import main from '../../fragments/nl/index.main.html?raw';
+import scripts from '../../fragments/nl/index.scripts.html?raw';
+---
+<Layout lang="nl" path="/nl/" title="Cricket in Geel en de Kempen | Kempen Cricket Club" description="Een nieuwe thuis voor cricket in de Kempen \u2014 Geel, Mol, Herentals en omstreken. Voor elke leeftijd en achtergrond. Drie gratis proefsessies, geen ervaring of materiaal nodig." robots="index,follow">
+  <Fragment set:html={main} />
+  <Fragment slot="scripts" set:html={scripts} />
+</Layout>

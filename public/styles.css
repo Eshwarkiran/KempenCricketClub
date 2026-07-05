@@ -1,0 +1,414 @@
+/* ==========================================================================
+   Kempen Cricket Club — prototype stylesheet (shared across all pages)
+   Brand: white/cream base · yellow #FCC200 signature pop · green only in badge
+   Fonts: Space Grotesk (display) · Hanken Grotesk (body) · Geist Mono (labels)
+   ========================================================================== */
+:root{
+  --bg:#FFFFFF; --cream:#F6F4ED; --card:#EDE8D6; --ink:#111111;
+  --yellow:#FCC200; --yellow-press:#E3AE00;
+  --green:#1F4A36; --field:#3C7A53; --sand:#C9A66B; --red:#A11D2A;
+  --ease:cubic-bezier(0.22,1,0.36,1);
+  --maxw:1120px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+[id]{scroll-margin-top:92px} /* anchors land below sticky header */
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"Hanken Grotesk",system-ui,sans-serif; font-weight:400;
+  font-size:17px; line-height:1.6; -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:"Space Grotesk",sans-serif; font-weight:700; line-height:1.1; letter-spacing:-0.01em}
+a{color:inherit; text-decoration:none}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px}
+.eyebrow{font-family:"Geist Mono",monospace; font-weight:500; text-transform:uppercase; letter-spacing:0.08em; font-size:12.5px; color:var(--field)}
+.section{padding:76px 0}
+.section--cream{background:var(--cream)}
+.lede{font-size:18px; max-width:62ch}
+strong,.b{font-weight:600}
+
+/* buttons */
+.btn{display:inline-flex; align-items:center; gap:8px; cursor:pointer;
+  font-family:"Hanken Grotesk",sans-serif; font-weight:600; font-size:16px;
+  padding:13px 22px; border-radius:4px; border:0;
+  transition:background .18s var(--ease),transform .18s var(--ease),color .18s var(--ease),box-shadow .18s var(--ease)}
+.btn--primary{background:var(--yellow); color:var(--ink)}
+.btn--primary:hover{background:var(--yellow-press)}
+.btn--ghost{background:transparent; color:var(--ink); box-shadow:inset 0 0 0 1.5px rgba(17,17,17,.18)}
+.btn--ghost:hover{box-shadow:inset 0 0 0 1.5px var(--ink)}
+.btn--onink{background:var(--yellow); color:var(--ink)}
+.btn--onink:hover{background:var(--yellow-press)}
+.btn--ghost-ink{background:transparent; color:var(--ink); box-shadow:inset 0 0 0 1.5px rgba(17,17,17,.18)}
+.btn--ghost-ink:hover{box-shadow:inset 0 0 0 1.5px var(--ink)}
+
+.ulink{position:relative; font-weight:600; color:var(--ink); display:inline-block}
+.ulink::after{content:""; position:absolute; left:0; bottom:-2px; height:2px; width:100%; background:var(--yellow); transform:scaleX(0); transform-origin:left; transition:transform .26s var(--ease)}
+.ulink:hover::after{transform:scaleX(1)}
+
+/* header */
+header.site{position:sticky; top:0; z-index:50; background:rgba(255,255,255,.92); backdrop-filter:blur(8px); border-bottom:1px solid rgba(17,17,17,.08)}
+.nav{display:flex; align-items:center; justify-content:space-between; height:74px; gap:24px}
+.brand{display:flex; align-items:center; gap:12px}
+.brand svg{width:46px; height:46px; display:block}
+.brand .names{display:flex; flex-direction:column; line-height:1.05}
+.brand .nm{font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:17px}
+.brand .tag{font-family:"Geist Mono",monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:var(--field)}
+.menu{display:flex; align-items:center; gap:26px}
+.menu a{font-size:15px; position:relative; padding:4px 0}
+.menu a:hover{color:var(--green)}
+.menu a.active::after{content:""; position:absolute; left:0; bottom:-2px; height:2px; width:100%; background:var(--yellow)}
+.nav-right{display:flex; align-items:center; gap:18px}
+.lang{font-family:"Geist Mono",monospace; font-size:12px; text-transform:uppercase; letter-spacing:0.06em; display:flex; gap:6px; align-items:center}
+.lang a{opacity:.5} .lang a.on{opacity:1; color:var(--green); font-weight:600} .lang span{opacity:.3}
+.nav .btn{padding:10px 16px; font-size:14px}
+.burger{display:none; background:none; border:0; cursor:pointer}
+
+/* hero (home) */
+.hero{background:var(--cream); border-bottom:1px solid rgba(17,17,17,.06); overflow:hidden}
+.hero-inner{display:grid; grid-template-columns:1.15fr .85fr; gap:48px; align-items:center; padding:64px 0 72px}
+.hero h1{font-size:clamp(40px,5vw,64px); line-height:1.05; margin:16px 0 0}
+.hero .sub{margin-top:18px; font-size:18px; max-width:52ch}
+.hero .cta{display:flex; gap:14px; margin-top:26px; flex-wrap:wrap}
+.hero .micro{font-family:"Geist Mono",monospace; font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:#555; margin-top:18px}
+.hero-badge{display:flex; justify-content:center}
+.hero-badge svg{width:min(280px,72%); height:auto; filter:drop-shadow(0 18px 40px rgba(31,74,54,.18))}
+
+/* interior page hero */
+.page-hero{background:var(--cream); border-bottom:1px solid rgba(17,17,17,.06)}
+.page-hero .inner{padding:52px 0 48px; max-width:760px}
+.page-hero h1{font-size:clamp(32px,4vw,48px); margin:12px 0 0}
+.page-hero .sub{margin-top:14px; font-size:18px; color:#333}
+.page-hero .cta{display:flex; gap:12px; margin-top:22px; flex-wrap:wrap}
+.crumb{font-family:"Geist Mono",monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:.07em; color:#777}
+.crumb a:hover{color:var(--green)}
+
+/* cards / grids */
+.grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-top:32px}
+.card{background:var(--card); border-radius:8px; padding:26px}
+.card h3{font-size:20px; margin-bottom:8px}
+.card .ic{width:34px; height:34px; border-radius:999px; background:#fff; display:flex; align-items:center; justify-content:center; margin-bottom:14px; color:var(--green)}
+.card p{font-size:15.5px}
+.two{display:grid; grid-template-columns:1fr 1fr; gap:44px; align-items:center}
+h2.big{font-size:clamp(26px,3vw,36px); margin-top:10px}
+.section p.body{margin-top:16px}
+
+/* stats */
+.stats{display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:28px}
+.stat{border-top:3px solid var(--yellow); padding-top:14px}
+.stat .n{font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:27px}
+.stat .l{font-family:"Geist Mono",monospace; font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:#555; margin-top:4px}
+
+/* accent band — light per brand guide (no dark/green backdrops) */
+.band{background:var(--cream); color:var(--ink); position:relative; border-top:1px solid rgba(17,17,17,.06); border-bottom:1px solid rgba(17,17,17,.06)}
+.band::before{content:""; position:absolute; top:-1px; left:0; right:0; height:4px; background:var(--yellow)}
+.band .eyebrow{color:var(--field)} .band h2{color:var(--ink)}
+.band .cta{margin-top:24px; display:flex; gap:14px; flex-wrap:wrap}
+
+/* promos / dual */
+.dual{display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:32px}
+.promo{border:1px solid rgba(17,17,17,.12); border-radius:8px; padding:28px; background:#fff}
+.promo h3{font-size:21px} .promo p{margin:10px 0 18px; font-size:15.5px; color:#333}
+
+/* ---- prose (long-form content: Learn Cricket) ---- */
+.prose{max-width:760px}
+.prose h2{font-size:26px; margin:40px 0 12px}
+.prose h3{font-size:20px; margin:26px 0 8px}
+.prose p{margin:12px 0}
+.prose ul{margin:12px 0 12px 4px; list-style:none}
+.prose ul li{position:relative; padding:6px 0 6px 26px}
+.prose ul li::before{content:""; position:absolute; left:0; top:15px; width:10px; height:10px; border-radius:2px; background:var(--yellow)}
+.prose .term{font-weight:600}
+.callout{background:var(--cream); border-left:3px solid var(--field); border-radius:0 8px 8px 0; padding:22px 24px; margin:26px 0}
+.callout .eyebrow{margin-bottom:6px}
+.glossary{display:grid; grid-template-columns:1fr 1fr; gap:10px 28px; margin-top:18px}
+.glossary div{padding:10px 0; border-bottom:1px solid rgba(17,17,17,.08); font-size:15.5px}
+.glossary .gt{font-weight:600}
+
+/* ---- dimensions + fielding diagram ---- */
+.dims{display:grid; grid-template-columns:1fr 1fr; gap:8px 28px; margin-top:18px}
+.dims div{padding:11px 0; border-bottom:1px solid rgba(17,17,17,.08); font-size:15.5px}
+.dims .dk{font-weight:600}
+.field-fig{max-width:540px; margin:28px auto 4px; display:block}
+.field-fig svg{width:100%; height:auto}
+.figcap{font-family:"Geist Mono",monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:#777; text-align:center; margin:4px 0 12px}
+.posgroup h3{font-size:18px; margin:24px 0 6px}
+.poslist{list-style:none; margin:0}
+.poslist li{padding:7px 0 7px 26px; position:relative; font-size:15.5px}
+.poslist li::before{content:""; position:absolute; left:0; top:14px; width:9px; height:9px; border-radius:999px; background:var(--field)}
+.poslist .pn{font-weight:600}
+
+/* quiz teaser — light card per brand guide */
+.quiz-teaser{background:#fff; color:var(--ink); border:1px solid rgba(17,17,17,.1); border-radius:10px; padding:30px; position:relative; overflow:hidden; box-shadow:0 6px 22px rgba(31,74,54,.06)}
+.quiz-teaser::before{content:""; position:absolute; top:0; left:0; right:0; height:4px; background:var(--yellow)}
+.quiz-teaser h3{color:var(--ink); font-size:22px}
+.tiers{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:22px 0 26px}
+.tier{background:var(--cream); border:1px solid rgba(17,17,17,.08); border-radius:8px; padding:16px}
+.tier .nq{font-family:"Geist Mono",monospace; color:var(--field); font-size:13px}
+.tier .tn{font-family:"Space Grotesk",sans-serif; font-weight:700; margin-top:4px}
+
+/* ---- tables (fees) ---- */
+.tbl{width:100%; border-collapse:collapse; margin-top:22px; font-size:16px}
+.tbl th,.tbl td{text-align:left; padding:15px 16px; border-bottom:1px solid rgba(17,17,17,.1)}
+.tbl thead th{font-family:"Geist Mono",monospace; font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:#555; font-weight:500}
+.tbl td.fee{font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:20px; white-space:nowrap}
+.tbl tr:hover td{background:var(--cream)}
+.table-scroll{overflow-x:auto; margin-top:22px}
+.cmp{width:100%; border-collapse:collapse; min-width:560px; font-size:15.5px}
+.cmp th,.cmp td{text-align:left; padding:13px 16px; border-bottom:1px solid rgba(17,17,17,.1); vertical-align:top}
+.cmp thead th{font-family:"Space Grotesk",sans-serif; font-size:18px; color:var(--green)}
+.cmp thead th span{display:block; font-family:"Geist Mono",monospace; font-size:11px; letter-spacing:.05em; color:#888; font-weight:500; margin-top:2px}
+.cmp tbody th{font-family:"Geist Mono",monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:.05em; color:#777; font-weight:500; white-space:nowrap}
+.cmp td:first-of-type,.cmp th:first-child{position:sticky; left:0; background:#fff}
+.cmp tr:hover td{background:var(--cream)}
+
+/* ---- steps ---- */
+.steps{counter-reset:s; margin-top:26px; display:grid; gap:14px}
+.step{display:grid; grid-template-columns:auto 1fr; gap:18px; align-items:start; background:#fff; border:1px solid rgba(17,17,17,.1); border-radius:8px; padding:20px 22px}
+.step .num{counter-increment:s; width:38px; height:38px; border-radius:999px; background:var(--yellow); color:var(--ink); font-family:"Space Grotesk",sans-serif; font-weight:700; display:flex; align-items:center; justify-content:center}
+.step .num::before{content:counter(s)}
+.step h4{font-size:18px; margin-bottom:4px}
+.step p{font-size:15px; color:#333}
+
+/* includes / excludes */
+.incex{display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:26px}
+.incex .box{border-radius:8px; padding:24px}
+.incex .inc{background:var(--cream)}
+.incex .exc{background:#fff; border:1px solid rgba(17,17,17,.12)}
+.incex h4{font-size:16px; margin-bottom:12px}
+.incex li{list-style:none; padding:7px 0 7px 26px; position:relative; font-size:15px}
+.incex .inc li::before{content:"✓"; position:absolute; left:0; color:var(--field); font-weight:700}
+.incex .exc li::before{content:"—"; position:absolute; left:0; color:#aaa}
+
+/* ---- forms ---- */
+.form{background:var(--cream); border-radius:10px; padding:34px; max-width:680px}
+.field{margin-bottom:18px}
+.field label{display:block; font-family:"Geist Mono",monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:#555; margin-bottom:7px}
+.field input,.field select,.field textarea{width:100%; font-family:inherit; font-size:16px; padding:12px 14px; border-radius:6px; border:1.5px solid rgba(17,17,17,.18); background:#fff}
+.field textarea{min-height:96px; resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none; border-color:var(--yellow); box-shadow:0 0 0 3px rgba(252,194,0,.25)}
+.frow{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+.radios{display:flex; gap:10px; flex-wrap:wrap}
+.radios label{display:inline-flex; align-items:center; gap:8px; background:#fff; border:1.5px solid rgba(17,17,17,.18); border-radius:999px; padding:9px 16px; cursor:pointer; font-family:inherit; font-size:15px; text-transform:none; letter-spacing:0; color:var(--ink)}
+.check{display:flex; gap:10px; align-items:flex-start; font-size:14px; color:#444; margin-bottom:16px}
+.check input{margin-top:4px}
+
+/* contact split */
+.contact-grid{display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:start}
+.routes li{list-style:none; padding:14px 0; border-bottom:1px solid rgba(17,17,17,.1)}
+.routes .r{font-weight:600} .routes .who{color:#555; font-size:15px}
+.findus{background:var(--card); border-radius:8px; padding:24px; margin-top:24px; font-size:15.5px}
+.findus .k{font-family:"Geist Mono",monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:#555}
+
+/* ---- sponsors page ---- */
+.sp-foundational{display:flex; flex-direction:column; align-items:center; margin-top:36px}
+.sp-badge{display:inline-block; background:var(--yellow); color:var(--ink); font-family:"Geist Mono",monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:.07em; padding:6px 16px; border-radius:999px; margin-bottom:14px}
+.sp-panel{background:#fff; border:1px solid rgba(17,17,17,.1); border-radius:12px; width:320px; height:128px; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 22px rgba(31,74,54,.08)}
+.sp-panel .nm{font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:24px; color:var(--green)}
+.sp-logo{max-height:90px; max-width:260px; width:auto; height:auto; object-fit:contain; display:block}
+.sp-partners-label{font-family:"Geist Mono",monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:.08em; color:#888; text-align:center; margin:40px 0 16px}
+.pslots{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; max-width:760px; margin:0 auto}
+.pslot{height:96px; border:1px dashed rgba(17,17,17,.2); border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#9a9a9a; font-family:"Geist Mono",monospace; font-size:11px; letter-spacing:.05em; background:#fff}
+.pslot span.plus{font-size:20px; margin-bottom:4px}
+.offer-list{display:grid; grid-template-columns:1fr 1fr; gap:16px 28px; margin-top:24px}
+.offer-list li{list-style:none; padding:12px 0 12px 28px; position:relative; font-size:15.5px; border-bottom:1px solid rgba(17,17,17,.08)}
+.offer-list li::before{content:""; position:absolute; left:0; top:18px; width:10px; height:10px; border-radius:2px; background:var(--yellow)}
+.found-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:36px}
+.found-slot{display:flex; flex-direction:column; align-items:center; text-align:center}
+.found-panel{background:#fff; border:1px solid rgba(17,17,17,.1); border-radius:12px; width:100%; height:120px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 16px rgba(31,74,54,.06); padding:14px; text-decoration:none}
+.found-panel.open{border-style:dashed; box-shadow:none; color:#9a9a9a; flex-direction:column; gap:3px; font-family:"Geist Mono",monospace; font-size:11px; letter-spacing:.05em}
+.found-panel.open .plus{font-size:20px}
+.found-cat{font-family:"Geist Mono",monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--field); margin-top:12px; font-weight:500}
+.found-sub{font-size:12.5px; color:#999; margin-top:2px}
+
+/* ---- FAQ accordion ---- */
+.faq{max-width:820px; margin-top:30px}
+.faq details{border-bottom:1px solid rgba(17,17,17,.12)}
+.faq summary{list-style:none; cursor:pointer; padding:20px 4px; font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:18px; display:flex; justify-content:space-between; align-items:center; gap:16px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary .chev{flex:0 0 auto; width:22px; height:22px; transition:transform .22s var(--ease); color:var(--field)}
+.faq details[open] summary .chev{transform:rotate(180deg)}
+.faq .ans{padding:0 4px 22px; color:#333; font-size:16px}
+.faq-group{font-family:"Geist Mono",monospace; font-size:12px; text-transform:uppercase; letter-spacing:.07em; color:var(--field); margin:38px 0 6px}
+
+/* ---- news cards ---- */
+.news-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:22px; margin-top:32px}
+.news-card{background:#fff; border:1px solid rgba(17,17,17,.1); border-radius:10px; overflow:hidden; display:flex; flex-direction:column; transition:box-shadow .2s var(--ease),transform .2s var(--ease)}
+.news-card:hover{box-shadow:0 10px 30px rgba(31,74,54,.1); transform:translateY(-3px)}
+.news-card .thumb{aspect-ratio:16/9; background:var(--card); display:flex; align-items:center; justify-content:center; color:var(--green)}
+.news-card .thumb svg{width:46px;height:46px;opacity:.7}
+.news-card .body{padding:22px; display:flex; flex-direction:column; flex:1}
+.news-card .date{font-family:"Geist Mono",monospace; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:#999}
+.news-card h3{font-size:20px; margin:8px 0 8px}
+.news-card p{font-size:15px; color:#444; flex:1}
+.news-card .more{margin-top:14px; font-weight:600; font-size:14px; color:var(--ink)}
+.news-card .more:hover{color:var(--green)}
+
+/* ---- registration form ---- */
+.reg{max-width:780px}
+.reg fieldset{border:0; padding:0; margin:0 0 34px}
+.reg legend{width:100%; font-family:"Geist Mono",monospace; font-size:12px; font-weight:500; text-transform:uppercase; letter-spacing:.07em; color:var(--green); padding-bottom:10px; border-bottom:2px solid var(--yellow); margin-bottom:18px}
+.reg .step-n{font-family:"Geist Mono",monospace; color:var(--field); margin-right:8px}
+.pills{display:grid; grid-template-columns:repeat(4,1fr); gap:12px}
+.pill input{position:absolute; opacity:0; pointer-events:none}
+.pill label{display:block; border:1.5px solid rgba(17,17,17,.16); border-radius:8px; padding:16px 12px; cursor:pointer; text-align:center; font-family:"Hanken Grotesk",sans-serif; font-weight:600; font-size:15px; color:var(--ink); margin:0; transition:.15s var(--ease); text-transform:none; letter-spacing:0}
+.pill label small{display:block; font-weight:400; color:#777; font-size:12px; margin-top:4px}
+.pill input:checked + label{border-color:var(--green); background:var(--cream); box-shadow:inset 0 0 0 1px var(--green)}
+.pill input:focus-visible + label{box-shadow:0 0 0 3px rgba(252,194,0,.4)}
+.reg .note{background:#FBF6E3; border:1px solid #F0E3A8; border-radius:8px; padding:14px 16px; font-size:13.5px; color:#6b5b16; margin-bottom:18px}
+.reg .minor{display:none}
+.reg .req{color:var(--red)}
+.reg .hint{font-size:12.5px; color:#777; margin-top:6px}
+.reg .sub-note{font-size:13px; color:#666; text-align:center; margin-top:18px}
+
+/* ---- team cards ---- */
+.team{display:grid; grid-template-columns:repeat(3,1fr); gap:22px; margin-top:32px}
+.member{background:#fff; border:1px solid rgba(17,17,17,.1); border-radius:10px; overflow:hidden; display:flex; flex-direction:column}
+.member .photo{aspect-ratio:4/3; background:var(--card); display:flex; align-items:center; justify-content:center; color:var(--green); position:relative}
+.member .photo .ph{font-family:"Geist Mono",monospace; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:#9a8f6e; position:absolute; bottom:10px}
+.member .photo svg{width:64px; height:64px; opacity:.8}
+.member .body{padding:22px}
+.member .nm{font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:20px}
+.member .role{font-family:"Geist Mono",monospace; font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--field); margin-top:4px}
+.member p.bio{font-size:15px; color:#333; margin-top:12px}
+.member .cfor{font-size:14px; margin-top:14px; padding-top:14px; border-top:1px solid rgba(17,17,17,.08)}
+.member .cfor .k{font-family:"Geist Mono",monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:#888; display:block; margin-bottom:3px}
+.member .email{display:inline-block; margin-top:10px; font-weight:600; font-size:14px; color:var(--ink)}
+.member .email:hover{color:var(--green)}
+.advisor{background:var(--cream); border-radius:10px; padding:30px; display:grid; grid-template-columns:auto 1fr; gap:24px; align-items:center; margin-top:40px}
+.advisor .photo{width:120px; height:120px; border-radius:999px; background:#fff; display:flex; align-items:center; justify-content:center; color:var(--green)}
+.advisor .photo svg{width:54px;height:54px;opacity:.8}
+.advisor .role{font-family:"Geist Mono",monospace; font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--field)}
+.advisor h3{font-size:24px; margin:4px 0 8px}
+
+/* footer — light per brand guide */
+footer{background:var(--cream); color:#444; padding:52px 0 30px; border-top:1px solid rgba(17,17,17,.08)}
+.f-grid{display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:40px}
+footer h4{color:var(--ink); font-size:14px; font-family:"Geist Mono",monospace; text-transform:uppercase; letter-spacing:.08em; font-weight:500; margin-bottom:14px}
+footer a{color:#444; font-size:14.5px; display:block; padding:4px 0}
+footer a:hover{color:var(--green)}
+.f-brand .nm{color:var(--ink); font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:18px}
+.f-brand p{font-size:14px; margin-top:10px; max-width:34ch}
+.sponsor-strip{border-top:1px solid rgba(17,17,17,.1); margin-top:40px; padding-top:28px}
+.sponsor-strip .lbl{font-family:"Geist Mono",monospace; font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:#888; text-align:center; margin-bottom:16px}
+.slots{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; max-width:680px; margin:0 auto}
+.slot{height:64px; border:1px dashed rgba(17,17,17,.2); border-radius:8px; display:flex; align-items:center; justify-content:center; font-family:"Geist Mono",monospace; font-size:11px; color:#999; letter-spacing:.05em; background:#fff}
+.legal{border-top:1px solid rgba(17,17,17,.1); margin-top:34px; padding-top:22px; font-size:13px; color:#888; display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap}
+
+/* reveal */
+.reveal{opacity:0; transform:translateY(16px); transition:opacity .5s var(--ease),transform .5s var(--ease)}
+.reveal.in{opacity:1; transform:none}
+
+@media (max-width:900px){
+  .nav .btn.deskcta{display:none}
+  .burger{display:block}
+  /* mobile menu: hidden dropdown that the burger toggles open */
+  .menu{
+    display:none; position:absolute; top:74px; left:0; right:0;
+    flex-direction:column; align-items:stretch; gap:0;
+    background:#fff; border-bottom:1px solid rgba(17,17,17,.1);
+    padding:6px 24px 14px; box-shadow:0 14px 28px rgba(0,0,0,.08);
+  }
+  header.site.open .menu{display:flex}
+  header.site.open .burger{background:rgba(17,17,17,.05); border-radius:8px}
+  .menu a{font-size:17px; padding:13px 2px; width:100%; border-bottom:1px solid rgba(17,17,17,.06)}
+  .menu a:last-child{border-bottom:0}
+  .menu a.active::after{display:none}
+  .menu a.active{color:var(--green); font-weight:600}
+  .hero-inner{grid-template-columns:1fr; padding:44px 0 52px}
+  .hero-badge{order:-1} .hero-badge svg{width:190px} .hero-badge img{width:190px}
+  .grid3,.stats,.dual,.f-grid,.slots,.glossary,.incex,.tiers,.contact-grid,.frow,.found-grid{grid-template-columns:1fr 1fr}
+  .two{grid-template-columns:1fr; gap:24px}
+  .section{padding:52px 0}
+  .page-hero .inner{padding:40px 0 36px}
+}
+@media (max-width:560px){
+  .grid3,.stats,.dual,.f-grid,.glossary,.incex,.contact-grid,.frow,.tiers{grid-template-columns:1fr}
+  .slots{grid-template-columns:1fr 1fr}
+  .hero h1{font-size:36px}
+}
+
+/* form success state */
+.form-ok{background:var(--cream); border:1px solid rgba(31,74,54,.18); border-left:4px solid var(--green); border-radius:12px; padding:22px 24px; color:var(--ink)}
+.form-ok strong{font-family:"Space Grotesk",sans-serif; font-size:18px; color:var(--green)}
+
+/* ==========================================================
+   VISUAL UPGRADE LAYER — July 2026
+   ========================================================== */
+
+/* photo frame: <figure class="duo"><img …></figure>
+   full-colour photo in a light frame per brand guide; the whole
+   figure is hidden by the img onerror handler until the file exists */
+.duo{position:relative; overflow:hidden; border-radius:10px; background:#fff;
+  border:1px solid rgba(17,17,17,.1); box-shadow:0 6px 22px rgba(31,74,54,.08)}
+.duo img{width:100%; height:100%; object-fit:cover; display:block}
+.duo figcaption{position:absolute; left:14px; bottom:12px; z-index:2;
+  font-family:"Geist Mono",monospace; font-size:10.5px; letter-spacing:.06em;
+  text-transform:uppercase; color:#fff; text-shadow:0 1px 8px rgba(17,17,17,.6)}
+
+/* full-bleed photo band between sections (hidden until image exists) */
+.photo-band{position:relative; height:clamp(220px,34vw,380px); overflow:hidden;
+  border-top:1px solid rgba(17,17,17,.06); border-bottom:1px solid rgba(17,17,17,.06)}
+.photo-band img{width:100%; height:100%; object-fit:cover; display:block}
+.photo-band .quote{position:absolute; inset:0; display:flex; align-items:center}
+.photo-band .quote .wrap{width:100%}
+.photo-band .quote p{display:inline-block; background:rgba(255,255,255,.92);
+  font-family:"Space Grotesk",sans-serif; font-weight:700; color:var(--ink);
+  font-size:clamp(18px,2.2vw,26px); max-width:24ch; line-height:1.25;
+  padding:14px 20px; border-radius:8px; border-left:4px solid var(--yellow)}
+
+/* ball-seam section divider */
+.seam{height:14px; margin:0 0 26px; max-width:180px; background-repeat:repeat-x; background-position:left center;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='14'%3E%3Cpath d='M4 11 L10 3 M18 11 L24 3' stroke='%23FCC200' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E")}
+
+/* official badge as <img> (header + hero) */
+.brand img{width:46px; height:46px; display:block}
+.hero-badge img{width:min(280px,72%); height:auto; filter:drop-shadow(0 18px 40px rgba(31,74,54,.18))}
+
+/* monogram portraits (Team) — cream surface per brand guide */
+.member .photo.mono, .advisor .photo.mono{background:var(--card)}
+.mono .mg{font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:44px;
+  color:var(--green); letter-spacing:.02em}
+.mono .ring{position:absolute; inset:14px; border:2px solid var(--yellow); border-radius:8px}
+.advisor .photo.mono{position:relative}
+.advisor .photo.mono .mg{font-size:34px}
+
+/* inset photo inside prose/two-col sections */
+.inset-img{margin:26px 0}
+.inset-img .duo{aspect-ratio:3/2}
+
+/* disabled / coming-soon button */
+.btn--soon{background:transparent; color:#888; cursor:default;
+  box-shadow:inset 0 0 0 1.5px rgba(17,17,17,.14); pointer-events:none}
+.btn--soon .tag-soon{font-family:"Geist Mono",monospace; font-size:10px; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--field); margin-left:8px}
+
+/* footer: single live sponsor slot */
+.slots.one{grid-template-columns:minmax(180px,220px); justify-content:center}
+.slot.live{border-style:solid; border-color:rgba(17,17,17,.18); color:var(--green);
+  font-family:"Space Grotesk",sans-serif; font-size:15px; letter-spacing:.02em; font-weight:700}
+.slot.live:hover{border-color:var(--green)}
+
+/* map embed */
+.map-embed{border-radius:8px; overflow:hidden; margin-top:16px; border:1px solid rgba(17,17,17,.1)}
+.map-embed iframe{width:100%; height:240px; border:0; display:block}
+
+/* registration form alignment: labels flex to equal height so inputs line up */
+.reg .frow{align-items:start}
+.reg .frow .field>label{display:flex; align-items:flex-end; min-height:34px}
+
+/* footer sponsor logo (Stad Geel) — use provided artwork as-is */
+.sponsor-strip .slot.live{padding:8px}
+.sponsor-strip .slot.live .sp-logo{max-height:42px; max-width:160px; width:auto; height:auto}
+
+/* footer subscribe (added 5 Jul 2026) */
+.sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0}
+.subscribe{border-top:1px solid rgba(17,17,17,.1); margin-top:40px; padding-top:28px; display:flex; flex-wrap:wrap; gap:16px 40px; align-items:flex-start; justify-content:space-between}
+.subscribe .s-copy{max-width:440px}
+.subscribe .s-copy h4{margin-bottom:6px}
+.subscribe .s-copy p{color:#555; font-size:14.5px; margin:0}
+.s-form{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+.s-form input[type=email]{padding:12px 14px; border:1px solid rgba(17,17,17,.18); border-radius:10px; font:inherit; font-size:15px; min-width:260px; background:#fff; color:var(--ink)}
+.s-form input[type=email]:focus{outline:2px solid var(--green); outline-offset:1px}
+.s-form .s-note{flex-basis:100%; font-size:12.5px; color:#888; margin:0; padding:0}
+.s-form .s-note a{display:inline; padding:0; font-size:12.5px; text-decoration:underline}
+@media (max-width:700px){ .subscribe{flex-direction:column} .s-form{width:100%} .s-form input[type=email]{min-width:0; flex:1} }

@@ -1,0 +1,9 @@
+---
+import Layout from '../layouts/Layout.astro';
+import main from '../fragments/en/thank-you.main.html?raw';
+import scripts from '../fragments/en/thank-you.scripts.html?raw';
+---
+<Layout lang="en" path="/thank-you" title="Thank you | Kempen Cricket Club" description="Thanks for getting in touch with Kempen Cricket Club \u2014 here's what happens next." robots="noindex,follow">
+  <Fragment set:html={main} />
+  <Fragment slot="scripts" set:html={scripts} />
+</Layout>

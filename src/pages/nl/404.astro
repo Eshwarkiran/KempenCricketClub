@@ -1,0 +1,9 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import main from '../../fragments/nl/404.main.html?raw';
+import scripts from '../../fragments/nl/404.scripts.html?raw';
+---
+<Layout lang="nl" path="/nl/404" title="Pagina niet gevonden | Kempen Cricket Club" description="" robots="noindex">
+  <Fragment set:html={main} />
+  <Fragment slot="scripts" set:html={scripts} />
+</Layout>

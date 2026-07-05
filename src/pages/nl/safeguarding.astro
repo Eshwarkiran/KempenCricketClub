@@ -1,0 +1,9 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import main from '../../fragments/nl/safeguarding.main.html?raw';
+import scripts from '../../fragments/nl/safeguarding.scripts.html?raw';
+---
+<Layout lang="nl" path="/nl/safeguarding" title="Kinderbescherming &amp; veiligheid | Kempen Cricket Club" description="Het engagement van Kempen Cricket Club om kinderen en jongeren veilig te laten sporten, hoe je een bezorgdheid meldt, en onze afspraken rond foto's en coaching." robots="index,follow">
+  <Fragment set:html={main} />
+  <Fragment slot="scripts" set:html={scripts} />
+</Layout>

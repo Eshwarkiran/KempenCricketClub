@@ -1,0 +1,61 @@
+---
+interface Props { lang: 'en' | 'nl'; }
+const { lang } = Astro.props;
+const base = lang === 'en' ? '' : '/nl';
+const u = (slug: string) => `${base}/${slug}/`;
+const t = lang === 'en'
+  ? {
+      brand: 'The home of cricket in the Kempen. Open to every age, every background, every nationality.',
+      explore: 'Explore', learn: 'Learn Cricket', join: 'Join the club', team: 'Our team', about: 'About us', news: 'News', faq: 'FAQ', contact: 'Contact',
+      getInTouch: 'Get in touch', sponsor: 'Become a sponsor', volunteer: 'Volunteer with us',
+      legal: 'Legal', privacy: 'Privacy Policy', cookies: 'Cookie Policy', safe: 'Safeguarding', conduct: 'Code of Conduct', notice: 'Legal Notice', access: 'Accessibility',
+      foundational: 'Foundational sponsor',
+      subTitle: 'Stay in the loop',
+      subText: 'News, tryout dates and season updates — a short email now and then. No spam.',
+      subPlaceholder: 'you@example.com',
+      subBtn: 'Subscribe',
+      subNote: 'We only use your email for club updates. See our',
+      subNoteLink: 'Privacy Policy',
+      subAria: 'Subscribe to club updates',
+      subEmailLabel: 'Email address',
+    }
+  : {
+      brand: 'De thuis van cricket in de Kempen. Open voor elke leeftijd, elke achtergrond, elke nationaliteit.',
+      explore: 'Ontdek', learn: 'Leer cricket', join: 'Word lid', team: 'Ons team', about: 'Over ons', news: 'Nieuws', faq: 'FAQ', contact: 'Contact',
+      getInTouch: 'Contact', sponsor: 'Word sponsor', volunteer: 'Word vrijwilliger',
+      legal: 'Juridisch', privacy: 'Privacybeleid', cookies: 'Cookiebeleid', safe: 'Kinderbescherming', conduct: 'Gedragscode', notice: 'Juridische kennisgeving', access: 'Toegankelijkheid',
+      foundational: 'Stichtende sponsor',
+      subTitle: 'Blijf op de hoogte',
+      subText: 'Nieuws, proefsessies en seizoensupdates — af en toe een korte e-mail. Geen spam.',
+      subPlaceholder: 'jij@voorbeeld.be',
+      subBtn: 'Inschrijven',
+      subNote: 'We gebruiken je e-mail alleen voor clubupdates. Zie ons',
+      subNoteLink: 'privacybeleid',
+      subAria: 'Inschrijven voor clubupdates',
+      subEmailLabel: 'E-mailadres',
+    };
+---
+<footer>
+  <div class="wrap">
+    <div class="f-grid">
+      <div class="f-brand"><div class="nm">Kempen Cricket Club</div><p>{t.brand}</p></div>
+      <div><h4>{t.explore}</h4><a href={u('learn-cricket')}>{t.learn}</a><a href={u('join')}>{t.join}</a><a href={u('team')}>{t.team}</a><a href={u('about')}>{t.about}</a><a href={u('news')}>{t.news}</a><a href={u('faq')}>{t.faq}</a><a href={u('contact')}>{t.contact}</a></div>
+      <div><h4>{t.getInTouch}</h4><a href="mailto:contact@kempencricket.be">contact@kempencricket.be</a><a href={u('sponsors')}>{t.sponsor}</a><a href={u('contact')}>{t.volunteer}</a></div>
+      <div><h4>{t.legal}</h4><a href={u('privacy')}>{t.privacy}</a><a href={u('cookies')}>{t.cookies}</a><a href={u('safeguarding')}>{t.safe}</a><a href={u('code-of-conduct')}>{t.conduct}</a><a href={u('legal-notice')}>{t.notice}</a><a href={u('accessibility')}>{t.access}</a></div>
+    </div>
+    <div class="subscribe">
+      <div class="s-copy">
+        <h4>{t.subTitle}</h4>
+        <p>{t.subText}</p>
+      </div>
+      <form class="s-form" data-endpoint="/api/subscribe" aria-label={t.subAria}>
+        <label class="sr-only" for="footer-subscribe-email">{t.subEmailLabel}</label>
+        <input id="footer-subscribe-email" type="email" name="email" required placeholder={t.subPlaceholder} autocomplete="email" />
+        <button type="submit" class="btn btn--primary">{t.subBtn}</button>
+        <p class="s-note">{t.subNote} <a href={u('privacy')}>{t.subNoteLink}</a>.</p>
+      </form>
+    </div>
+    <div class="sponsor-strip"><div class="lbl">{t.foundational}</div><div class="slots one"><a class="slot live" href="https://www.geel.be" target="_blank" rel="noopener"><img src="/assets/stad-geel-logo.png" alt="Stad Geel" class="sp-logo" /></a></div></div>
+    <div class="legal"><span>Kempen Cricket Club VZW · Violetstraat 9, 2440 Geel · KBO 1039.026.584 · kempencricket.be</span><span>&copy; 2026 Kempen Cricket Club</span></div>
+  </div>
+</footer>

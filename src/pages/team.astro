@@ -1,0 +1,9 @@
+---
+import Layout from '../layouts/Layout.astro';
+import main from '../fragments/en/team.main.html?raw';
+import scripts from '../fragments/en/team.scripts.html?raw';
+---
+<Layout lang="en" path="/team" title="Our team \u2014 founders &amp; advisor | Kempen Cricket Club" description="Meet the volunteer board behind Kempen Cricket Club in Geel \u2014 Founder &amp; Chair Eshwar Kiran Pampana, Secretary Chirag Rambihari Sharma, Treasurer Nagarjuna Bandla \u2014 plus our advisory Club Mentor." robots="index,follow">
+  <Fragment set:html={main} />
+  <Fragment slot="scripts" set:html={scripts} />
+</Layout>

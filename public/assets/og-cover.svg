@@ -1,0 +1,8 @@
+<svg viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#F6F4ED"/>
+  <rect y="0" width="1200" height="8" fill="#FCC200"/>
+  <image href="kcc-badge.png" x="464" y="90" width="272" height="272"/>
+  <text x="600" y="452" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="bold" font-size="54" fill="#111111">Kempen Cricket Club</text>
+  <text x="600" y="506" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="24" letter-spacing="5" fill="#3C7A53">ONE PITCH · A WORLD OF CRICKET</text>
+  <text x="600" y="560" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="20" fill="#666666">kempencricket.be · Geel</text>
+</svg>

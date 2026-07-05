@@ -1,0 +1,124 @@
+<section class="page-hero">
+  <div class="wrap inner">
+    <span class="crumb"><a href="/">Home</a> / <a href="/join/">Join</a> / Register</span>
+    <span class="eyebrow" style="display:block;margin-top:14px">Membership registration · 2026</span>
+    <h1>Register to play</h1>
+    <p class="sub">A few details and you're on the team sheet. After you submit, we'll confirm your fee and payment by email. New to the club? You're welcome to try three free sessions first — just <a class="ulink" href="/join/">book a tryout</a>.</p>
+  </div>
+</section>
+
+<section class="section" id="form">
+  <div class="wrap reveal">
+    <form id="kccForm" class="form reg" data-endpoint="/api/register" novalidate>
+
+      <!-- 1 · CATEGORY -->
+      <fieldset>
+        <legend><span class="step-n">01</span>Membership category</legend>
+        <div class="pills">
+          <div class="pill"><input type="radio" id="cat-adult" name="category" value="Adult (€70)" required><label for="cat-adult">Adult <small>17+ · €70</small></label></div>
+          <div class="pill"><input type="radio" id="cat-junior" name="category" value="Junior (€50)"><label for="cat-junior">Junior <small>≤16 · €50</small></label></div>
+          <div class="pill"><input type="radio" id="cat-student" name="category" value="Thomas More student"><label for="cat-student">TM Student <small>special rate</small></label></div>
+          <div class="pill"><input type="radio" id="cat-support" name="category" value="Supporting (€25)"><label for="cat-support">Supporter <small>non-playing · €25</small></label></div>
+        </div>
+        <div class="hint">Thomas More (Geel) students: a special arrangement applies — we'll confirm your rate after you register.</div>
+      </fieldset>
+
+      <!-- 2 · YOUR DETAILS -->
+      <fieldset>
+        <legend><span class="step-n">02</span>Your details</legend>
+        <div class="frow">
+          <div class="field"><label>First name <span class="req">*</span></label><input name="firstName" required></div>
+          <div class="field"><label>Last name <span class="req">*</span></label><input name="lastName" required></div>
+        </div>
+        <div class="frow">
+          <div class="field"><label>Date of birth <span class="req">*</span></label><input type="date" name="dob" id="dob" required></div>
+          <div class="field"><label>Gender</label>
+            <select name="gender"><option value="">Prefer not to say</option><option>Female</option><option>Male</option><option>Other</option></select>
+          </div>
+        </div>
+        <div class="frow">
+          <div class="field"><label>Email <span class="req">*</span></label><input type="email" name="email" required></div>
+          <div class="field"><label>Mobile <span class="req">*</span></label><input type="tel" name="phone" required></div>
+        </div>
+        <div class="frow">
+          <div class="field"><label>Address (street, no.) <span class="req">*</span></label><input name="address" required></div>
+          <div class="field"><label>Postcode &amp; city <span class="req">*</span></label><input name="city" placeholder="2440 Geel" required></div>
+        </div>
+        <div class="frow">
+          <div class="field"><label>Place of birth</label><input name="birthplace" placeholder="City, country"></div>
+          <div class="field"><label>Nationality <span class="req">*</span></label><input name="nationality" required></div>
+        </div>
+        <div class="frow">
+          <div class="field"><label>National register no. <span class="hint">(rijksregisternummer — optional)</span></label><input name="nationalRegisterNo" inputmode="numeric" placeholder="YY.MM.DD-XXX.XX" autocomplete="off">
+            <div class="hint">Only used for federation registration and insurance (Cricket Vlaanderen / BCF). You may leave it blank — we can ask for it later if the federation requires it.</div>
+          </div>
+          <div class="field"><label>Thomas More student no. <span class="hint">(if applicable)</span></label><input name="studentId"></div>
+        </div>
+      </fieldset>
+
+      <!-- 3 · GUARDIAN (auto) -->
+      <fieldset class="minor" id="guardian">
+        <legend><span class="step-n">03</span>Parent / guardian (for members under 18)</legend>
+        <div class="frow">
+          <div class="field"><label>Guardian name <span class="req">*</span></label><input name="guardianName"></div>
+          <div class="field"><label>Relationship</label><input name="guardianRel" placeholder="Parent"></div>
+        </div>
+        <div class="frow">
+          <div class="field"><label>Guardian email <span class="req">*</span></label><input type="email" name="guardianEmail"></div>
+          <div class="field"><label>Guardian mobile <span class="req">*</span></label><input type="tel" name="guardianPhone"></div>
+        </div>
+      </fieldset>
+
+      <!-- 4 · CRICKET PROFILE -->
+      <fieldset>
+        <legend><span class="step-n">04</span>Cricket profile</legend>
+        <div class="frow">
+          <div class="field"><label>Experience level</label>
+            <select name="experience"><option>Complete beginner</option><option>Some experience</option><option>Club / school cricket</option><option>Competitive / league</option></select>
+          </div>
+          <div class="field"><label>Preferred role</label>
+            <select name="role"><option>Not sure yet</option><option>Batter</option><option>Bowler</option><option>All-rounder</option><option>Wicketkeeper</option></select>
+          </div>
+        </div>
+        <div class="frow">
+          <div class="field"><label>Batting hand</label>
+            <select name="battingHand"><option>Not sure yet</option><option>Right-handed</option><option>Left-handed</option></select>
+          </div>
+          <div class="field"><label>Bowling style</label>
+            <select name="bowlingStyle"><option>Not sure yet / don't bowl</option><option>Right-arm pace</option><option>Right-arm spin</option><option>Left-arm pace</option><option>Left-arm spin</option></select>
+          </div>
+        </div>
+        <div class="frow">
+          <div class="field"><label>Previous club <span class="hint">(if any)</span></label><input name="previousClub" placeholder="Club name & country"></div>
+          <div class="field"><label>Registered with a cricket federation before?</label>
+            <select name="priorFederation"><option>No</option><option>Yes — in Belgium</option><option>Yes — abroad</option><option>Not sure</option></select>
+          </div>
+        </div>
+        <div class="field"><label>How did you hear about us?</label>
+          <select name="heardVia"><option>Friend or family</option><option>Social media</option><option>Thomas More</option><option>School or sports club</option><option>Searching online</option><option>Poster or flyer</option><option>Other</option></select>
+        </div>
+      </fieldset>
+
+      <!-- 5 · HEALTH & SAFETY -->
+      <fieldset>
+        <legend><span class="step-n">05</span>Health &amp; safety</legend>
+        <div class="field"><label>Emergency contact (name &amp; phone) <span class="req">*</span></label><input name="emergency" required></div>
+        <div class="field"><label>Medical info we should know <span class="hint">(allergies, conditions — optional)</span></label><textarea name="medical" rows="2"></textarea></div>
+      </fieldset>
+
+      <!-- 6 · AGREEMENTS -->
+      <fieldset>
+        <legend><span class="step-n">06</span>Agreements</legend>
+        <div class="note">Insurance cover is being arranged through Cricket Vlaanderen. Until affiliation and cover are confirmed, participation is at your own risk — we'll let you know as soon as cover is in place.</div>
+        <label class="check"><input type="checkbox" id="c1" name="agreeRules" required> <span>I have read and accept the Club Rules &amp; Member Obligations. <span class="req">*</span></span></label>
+        <label class="check"><input type="checkbox" id="c1b" name="agreeHouse" required> <span>I have read and agree to abide by the KCC House Rules &amp; Code of Conduct. <span class="req">*</span></span></label>
+        <label class="check"><input type="checkbox" id="c2" name="agreeGdpr" required> <span>I consent to KCC processing my data for membership and federation registration (Cricket Vlaanderen / BCF), in line with the club's privacy notice. <span class="req">*</span></span></label>
+        <label class="check"><input type="checkbox" id="c3" name="agreePhoto"> <span>I consent to club photos/videos that may include me being used for club communications. (optional)</span></label>
+        <label class="check minor" id="guardianConsent"><input type="checkbox" id="c4" name="agreeGuardian"> <span>As parent/guardian, I register the named minor and accept the above on their behalf. <span class="req">*</span></span></label>
+      </fieldset>
+
+      <button class="btn btn--primary" type="submit" style="width:100%; justify-content:center">Submit registration</button>
+      <p class="sub-note">After you submit, we'll confirm your fee and payment details by email.<br>Kempen Cricket Club VZW · Violetstraat 9, 2440 Geel · KBO 1039.026.584</p>
+    </form>
+  </div>
+</section>

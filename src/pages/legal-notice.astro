@@ -1,0 +1,9 @@
+---
+import Layout from '../layouts/Layout.astro';
+import main from '../fragments/en/legal-notice.main.html?raw';
+import scripts from '../fragments/en/legal-notice.scripts.html?raw';
+---
+<Layout lang="en" path="/legal-notice" title="Legal Notice | Kempen Cricket Club" description="Legal notice and terms of use for the Kempen Cricket Club website \u2014 publisher identification, intellectual property, liability and applicable law." robots="index,follow">
+  <Fragment set:html={main} />
+  <Fragment slot="scripts" set:html={scripts} />
+</Layout>

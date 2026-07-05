@@ -1,0 +1,75 @@
+---
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  lang: 'en' | 'nl';
+  path: string;
+  title: string;
+  description?: string;
+  robots?: string;
+}
+const { lang, path, title, description = '', robots = 'index,follow' } = Astro.props;
+
+const origin = 'https://kempencricket.be';
+// normalize: every path ends with a trailing slash (matches build format 'directory')
+const norm = (p: string) => (p.endsWith('/') ? p : `${p}/`);
+const selfPath = norm(path);
+const enPath = lang === 'en' ? selfPath : (selfPath === '/nl/' ? '/' : norm(selfPath.replace(/^\/nl/, '')));
+const nlPath = lang === 'en' ? (selfPath === '/' ? '/nl/' : norm(`/nl${selfPath}`)) : selfPath;
+const enUrl = `${origin}${enPath}`;
+const nlUrl = `${origin}${nlPath}`;
+const canonicalUrl = `${origin}${selfPath}`;
+---
+<!DOCTYPE html>
+<html lang={lang}>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title}</title>
+  {description && <meta name="description" content={description} />}
+  <meta name="robots" content={robots} />
+  <meta property="og:title" content={title} />
+  {description && <meta property="og:description" content={description} />}
+  <meta property="og:image" content={`${origin}/assets/og-cover.png`} />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="canonical" href={canonicalUrl} />
+  <meta property="og:url" content={canonicalUrl} />
+  <link rel="alternate" hreflang="en" href={enUrl} />
+
+  <link rel="alternate" hreflang="nl" href={nlUrl} />
+  <link rel="alternate" hreflang="x-default" href={enUrl} />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Hanken+Grotesk:wght@400;600&family=Geist+Mono:wght@500&display=swap" rel="stylesheet" />
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <Header lang={lang} path={path} />
+  <main>
+    <slot />
+  </main>
+  <Footer lang={lang} />
+  <script is:inline>
+    /* reveal-on-scroll */
+    (function(){
+      var obs=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');obs.unobserve(e.target);}})},{threshold:0.12});
+      document.querySelectorAll('.reveal').forEach(function(el){obs.observe(el);});
+    })();
+    /* mobile menu toggle */
+    (function(){
+      var hdr=document.querySelector('header.site'),b=document.querySelector('.burger');
+      if(!hdr||!b)return;
+      b.setAttribute('aria-expanded','false');
+      b.addEventListener('click',function(e){e.stopPropagation();var o=hdr.classList.toggle('open');b.setAttribute('aria-expanded',o?'true':'false');});
+      document.addEventListener('click',function(e){if(hdr.classList.contains('open')&&!hdr.contains(e.target)){hdr.classList.remove('open');b.setAttribute('aria-expanded','false');}});
+      hdr.querySelectorAll('.menu a').forEach(function(a){a.addEventListener('click',function(){hdr.classList.remove('open');b.setAttribute('aria-expanded','false');});});
+    })();
+  </script>
+  <slot name="scripts" />
+  <script is:inline src="/assets/forms.js" defer></script>
+  <script is:inline src="/assets/cookie-consent.js" defer></script>
+</body>
+</html>

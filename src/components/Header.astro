@@ -1,0 +1,58 @@
+---
+interface Props { lang: 'en' | 'nl'; path: string; }
+const { lang, path } = Astro.props;
+
+const nav = [
+  { slug: 'home',          en: 'Home',          nl: 'Home' },
+  { slug: 'learn-cricket', en: 'Learn Cricket', nl: 'Leer cricket' },
+  { slug: 'join',          en: 'Join',          nl: 'Word lid' },
+  { slug: 'sponsors',      en: 'Sponsors',      nl: 'Sponsors' },
+  { slug: 'team',          en: 'Team',          nl: 'Team' },
+  { slug: 'about',         en: 'About',         nl: 'Over ons' },
+  { slug: 'news',          en: 'News',          nl: 'Nieuws' },
+  { slug: 'contact',       en: 'Contact',       nl: 'Contact' },
+];
+
+const base = lang === 'en' ? '' : '/nl';
+const url = (slug: string) => (slug === 'home' ? (base ? `${base}/` : '/') : `${base}/${slug}/`);
+
+// current slug (for active state)
+let rest = path.replace(/^\/nl/, '');
+rest = rest.replace(/^\//, '').replace(/\/$/, '');
+const current = rest === '' ? 'home' : rest.split('/')[0];
+
+// language toggle target (same page, other language) — always trailing-slashed
+const norm = (p: string) => (p.endsWith('/') ? p : `${p}/`);
+const selfPath = norm(path);
+const altUrl = lang === 'en'
+  ? (selfPath === '/' ? '/nl/' : norm(`/nl${selfPath}`))
+  : (selfPath === '/nl/' ? '/' : norm(selfPath.replace(/^\/nl/, '')));
+
+const joinUrl = lang === 'en' ? '/join/' : '/nl/join/';
+const ctaLabel = lang === 'en' ? 'Book free sessions' : 'Boek gratis sessies';
+const navLabel = lang === 'en' ? 'Primary' : 'Hoofdnavigatie';
+const langAria = lang === 'en' ? 'Language' : 'Taal';
+const homeUrl = base || '/';
+---
+<header class="site">
+  <div class="wrap nav">
+    <a class="brand" href={homeUrl} aria-label="Kempen Cricket Club home">
+      <img src="/assets/kcc-badge.svg" alt="" width="46" height="46" />
+      <span class="names"><span class="nm">Kempen Cricket Club</span><span class="tag">One pitch · A world of cricket</span></span>
+    </a>
+    <nav class="menu" aria-label={navLabel}>
+      {nav.map((n) => (
+        <a href={url(n.slug)} class={current === n.slug ? 'active' : undefined}>{lang === 'en' ? n.en : n.nl}</a>
+      ))}
+    </nav>
+    <div class="nav-right">
+      <span class="lang" aria-label={langAria}>
+        {lang === 'en'
+          ? (<><a href="#" class="on">EN</a><span>/</span><a href={altUrl}>NL</a></>)
+          : (<><a href={altUrl}>EN</a><span>/</span><a href="#" class="on">NL</a></>)}
+      </span>
+      <a class="btn btn--primary deskcta" href={joinUrl}>{ctaLabel}</a>
+      <button class="burger" aria-label="Menu"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    </div>
+  </div>
+</header>

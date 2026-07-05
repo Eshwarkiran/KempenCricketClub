@@ -1,0 +1,9 @@
+---
+import Layout from '../layouts/Layout.astro';
+import main from '../fragments/en/contact.main.html?raw';
+import scripts from '../fragments/en/contact.scripts.html?raw';
+---
+<Layout lang="en" path="/contact" title="Contact us | Kempen Cricket Club" description="Get in touch with Kempen Cricket Club in Geel \u2014 joining, sponsorship, volunteering or press. Email contact@kempencricket.be. Serving Geel, Mol, Herentals, Laakdal, Meerhout and Tessenderlo." robots="index,follow">
+  <Fragment set:html={main} />
+  <Fragment slot="scripts" set:html={scripts} />
+</Layout>
