@@ -1,5 +1,6 @@
 "use strict";
 const crypto = require("crypto");
+const jwt = require("jsonwebtoken");
 
 /** Constant-time string comparison. */
 function safeEqual(a, b) {
@@ -13,33 +14,62 @@ function safeEqual(a, b) {
   return crypto.timingSafeEqual(ba, bb);
 }
 
-/** Basic authentication. Returns null when OK, or a 401 response object. */
-function requireBasicAuth(request) {
-  const expectedUser = process.env.BASIC_AUTH_USER;
-  const expectedPass = process.env.BASIC_AUTH_PASSWORD;
-  if (!expectedUser || !expectedPass) {
+const JWT_ALG = "HS256";
+const JWT_ISSUER = "kcc-api";
+const JWT_AUDIENCE = "kcc-forms";
+
+/** Sign a short-lived HS256 access token. Throws if JWT_SECRET is missing. */
+function signToken(payload = {}) {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error("JWT_SECRET not configured");
+  const expiresIn = process.env.JWT_EXPIRES_IN || "15m";
+  return jwt.sign(payload, secret, {
+    algorithm: JWT_ALG,
+    issuer: JWT_ISSUER,
+    audience: JWT_AUDIENCE,
+    expiresIn
+  });
+}
+
+/** JWT Bearer authentication. Returns null when OK, or a 401 response object. */
+function requireJwt(request) {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
     return { status: 500, jsonBody: { error: "Auth not configured" } };
   }
   const header = request.headers.get("authorization") || "";
-  const match = /^Basic\s+(.+)$/i.exec(header);
-  let ok = false;
+  const match = /^Bearer\s+(.+)$/i.exec(header);
   if (match) {
-    const decoded = Buffer.from(match[1], "base64").toString("utf8");
-    const idx = decoded.indexOf(":");
-    if (idx > -1) {
-      const user = decoded.slice(0, idx);
-      const pass = decoded.slice(idx + 1);
-      ok = safeEqual(user, expectedUser) & safeEqual(pass, expectedPass);
+    try {
+      jwt.verify(match[1].trim(), secret, {
+        algorithms: [JWT_ALG],
+        issuer: JWT_ISSUER,
+        audience: JWT_AUDIENCE
+      });
+      return null;
+    } catch {
+      // invalid / expired token → fall through to 401
     }
   }
-  if (!ok) {
-    return {
-      status: 401,
-      headers: { "WWW-Authenticate": 'Basic realm="kcc-api"' },
-      jsonBody: { error: "Unauthorized" }
-    };
-  }
-  return null;
+  // No WWW-Authenticate header: this is a fetch()-based API, and a challenge
+  // header would trigger the browser's native login dialog.
+  return {
+    status: 401,
+    jsonBody: { error: "Unauthorized" }
+  };
+}
+
+/**
+ * Validate client credentials for the /token endpoint against
+ * BASIC_AUTH_USER / BASIC_AUTH_PASSWORD. Returns true/false.
+ */
+function checkClientCredentials(username, password) {
+  const expectedUser = process.env.BASIC_AUTH_USER;
+  const expectedPass = process.env.BASIC_AUTH_PASSWORD;
+  if (!expectedUser || !expectedPass) return false;
+  if (username == null || password == null) return false;
+  // bitwise & (not &&) so both comparisons always run — uniform timing.
+  return Boolean(safeEqual(username, expectedUser) & safeEqual(password, expectedPass));
 }
 
 /** Parse JSON body; returns {} on failure. */
@@ -86,4 +116,4 @@ function badRequest(message) {
   return { status: 400, jsonBody: { success: false, error: message } };
 }
 
-module.exports = { requireBasicAuth, readJson, str, bool, isEmail, dateOrNull, langOf, ok, badRequest };
+module.exports = { requireJwt, signToken, checkClientCredentials, readJson, str, bool, isEmail, dateOrNull, langOf, ok, badRequest };

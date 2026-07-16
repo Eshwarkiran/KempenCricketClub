@@ -1,0 +1,16 @@
+# Root build context (used by web.Dockerfile). Keep the image small and secrets out.
+node_modules
+dist
+.astro
+
+# The API has its own build context (./api) — no need to copy it into the web image.
+api
+
+# Tooling / local files
+bruno
+.git
+.gitignore
+.env
+.env.*
+.DS_Store
+npm-debug.log*

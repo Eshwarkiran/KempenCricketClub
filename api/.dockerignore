@@ -1,0 +1,15 @@
+# Never copy dependencies or secrets into the image.
+node_modules
+npm-debug.log*
+
+# Local secrets / settings — provided at runtime as env vars instead.
+local.settings.json
+.env
+.env.*
+
+# Docs and VCS noise.
+*.md
+.git
+.gitignore
+.funcignore
+.DS_Store

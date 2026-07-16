@@ -1,0 +1,39 @@
+# Kempen Cricket Club — website + form APIs, single origin via nginx.
+#   cp .env.sample .env      # then fill in real values (.env is gitignored)
+#   docker compose up --build
+#
+# Open the site at  http://localhost:8080  — nginx serves the Astro site and
+# proxies /api/* to the Functions container, so the forms work end to end.
+services:
+  api:
+    build:
+      context: ./api
+    image: kcc-api
+    # Functions runtime image is amd64-only; runs under emulation on arm64 Macs.
+    platform: linux/amd64
+    restart: unless-stopped
+    expose:
+      - "80"                 # reachable to nginx as http://api:80 (not published)
+    ports:
+      # Optional: direct API access for debugging / Bruno at http://localhost:7071
+      - "7071:80"
+    env_file:
+      - .env
+    healthcheck:
+      # /api/token returns 401 without credentials, which still proves the app is up.
+      test: ["CMD", "sh", "-c", "wget -q -O- --post-data='{}' --header='Content-Type: application/json' http://localhost:80/api/token || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  web:
+    build:
+      context: .
+      dockerfile: web.Dockerfile
+    image: kcc-web
+    restart: unless-stopped
+    ports:
+      - "80:80"              # public entry point — open http://localhost
+    depends_on:
+      - api

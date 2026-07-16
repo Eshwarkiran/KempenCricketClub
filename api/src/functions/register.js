@@ -1,14 +1,14 @@
 "use strict";
 const { app } = require("@azure/functions");
 const { sql, getPool } = require("../shared/db");
-const { requireBasicAuth, readJson, str, bool, isEmail, dateOrNull, langOf, ok, badRequest } = require("../shared/http");
+const { requireJwt, readJson, str, bool, isEmail, dateOrNull, langOf, ok, badRequest } = require("../shared/http");
 
 app.http("register", {
   route: "register",
   methods: ["POST"],
   authLevel: "anonymous",
   handler: async (request, context) => {
-    const denied = requireBasicAuth(request);
+    const denied = requireJwt(request);
     if (denied) return denied;
 
     const body = await readJson(request);

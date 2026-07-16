@@ -1,0 +1,45 @@
+meta {
+  name: Get Token
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/token
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "username": "{{clientUser}}",
+    "password": "{{clientPass}}"
+  }
+}
+
+script:post-response {
+  const data = res.getBody();
+  if (data && data.token) {
+    bru.setEnvVar("token", data.token);
+    console.log("Saved token (expires_in=" + data.expires_in + ")");
+  }
+}
+
+tests {
+  test("200 OK", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+  test("token present", function () {
+    expect(res.getBody().token).to.be.a("string").and.not.empty;
+  });
+}
+
+docs {
+  Exchange the client credentials for a short-lived Bearer JWT. The post-response
+  script stores the token in the `token` environment variable so the other requests
+  can use it via collection-level Bearer auth.
+}
