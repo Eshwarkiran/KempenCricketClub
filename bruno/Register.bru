@@ -1,0 +1,66 @@
+meta {
+  name: Register (full member)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/register
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "firstName": "Grace",
+    "lastName": "Hopper",
+    "email": "grace@example.com",
+    "category": "adult",
+    "phone": "+32470000000",
+    "address": "Kerkstraat 1",
+    "city": "Turnhout",
+    "dob": "1990-12-09",
+    "gender": "female",
+    "nationality": "Belgian",
+    "birthplace": "Antwerp",
+    "nationalRegisterNo": "90120912345",
+    "emergency": "John Hopper +32470111111",
+    "medical": "None",
+    "role": "all-rounder",
+    "battingHand": "right",
+    "bowlingStyle": "right-arm medium",
+    "experience": "5 years club cricket",
+    "previousClub": "Antwerp CC",
+    "priorFederation": "Cricket Belgium",
+    "guardianName": "",
+    "guardianRel": "",
+    "guardianPhone": "",
+    "guardianEmail": "",
+    "studentId": "",
+    "heardVia": "website",
+    "agreeGdpr": "on",
+    "agreeRules": "on",
+    "agreeHouse": "on",
+    "agreePhoto": "on",
+    "agreeGuardian": "",
+    "lang": "en"
+  }
+}
+
+tests {
+  test("200 OK", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+  test("success true", function () {
+    expect(res.getBody().success).to.equal(true);
+  });
+}
+
+docs {
+  Full membership registration. Required: `firstName`, `lastName`, valid `email`,
+  and `agreeGdpr` truthy. Guardian fields apply to minors; leave empty for adults.
+}

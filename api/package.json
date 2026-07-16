@@ -7,6 +7,7 @@
   "scripts": { "start": "func start" },
   "dependencies": {
     "@azure/functions": "^4.5.0",
+    "jsonwebtoken": "^9.0.2",
     "mssql": "^11.0.1"
   }
 }

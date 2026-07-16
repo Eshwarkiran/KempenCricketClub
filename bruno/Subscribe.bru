@@ -1,0 +1,35 @@
+meta {
+  name: Subscribe (newsletter)
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/subscribe
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "test@example.com",
+    "lang": "en"
+  }
+}
+
+tests {
+  test("200 OK", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+  test("success true", function () {
+    expect(res.getBody().success).to.equal(true);
+  });
+}
+
+docs {
+  Footer email signup. Idempotent (MERGE on email). Required: `email`.
+}

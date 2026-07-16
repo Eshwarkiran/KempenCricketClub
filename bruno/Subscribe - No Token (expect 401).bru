@@ -1,0 +1,32 @@
+meta {
+  name: Subscribe — No Token (expect 401)
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/subscribe
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "test@example.com",
+    "lang": "en"
+  }
+}
+
+tests {
+  test("401 Unauthorized", function () {
+    expect(res.getStatus()).to.equal(401);
+  });
+}
+
+docs {
+  Sanity check that the JWT gate works: with no Bearer token the API must reject the request.
+}

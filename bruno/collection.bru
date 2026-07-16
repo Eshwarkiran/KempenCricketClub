@@ -1,0 +1,23 @@
+auth {
+  mode: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+docs {
+  # Kempen Cricket Club — Form APIs
+
+  Azure Functions v4 form endpoints, protected by a shared-secret HS256 JWT.
+
+  ## How auth works
+  1. Run **Get Token** — it POSTs the client credentials to `/api/token` and, in a
+     post-response script, saves the returned JWT into the `token` environment variable.
+  2. Every other request inherits collection-level Bearer auth using `{{token}}`.
+  3. When the token expires (default 15m), run **Get Token** again.
+
+  ## Variables
+  Select the **Local** environment (or create your own) and set `baseUrl`, `clientUser`,
+  `clientPass`. `token` is populated automatically.
+}

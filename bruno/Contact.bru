@@ -1,0 +1,40 @@
+meta {
+  name: Contact
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/contact
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Alan Turing",
+    "email": "alan@example.com",
+    "topic": "Membership question",
+    "message": "When do winter nets start?",
+    "consent": "on",
+    "botcheck": "",
+    "lang": "en"
+  }
+}
+
+tests {
+  test("200 OK", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+  test("success true", function () {
+    expect(res.getBody().success).to.equal(true);
+  });
+}
+
+docs {
+  Contact form. Required: `name`, valid `email`, `message`. `botcheck` is a honeypot — leave empty.
+}

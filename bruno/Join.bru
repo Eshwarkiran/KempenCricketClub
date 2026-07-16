@@ -1,0 +1,43 @@
+meta {
+  name: Join (trial — 3 free sessions)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/join
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "firstName": "Ada",
+    "lastName": "Lovelace",
+    "email": "ada@example.com",
+    "category": "adult",
+    "town": "Turnhout",
+    "notes": "Complete beginner, keen to try.",
+    "consent": "on",
+    "botcheck": "",
+    "lang": "en"
+  }
+}
+
+tests {
+  test("200 OK", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+  test("success true", function () {
+    expect(res.getBody().success).to.equal(true);
+  });
+}
+
+docs {
+  Trial-member signup. Required: `firstName`, `lastName`, valid `email`. `botcheck`
+  is a honeypot — leave empty; any value makes the API return success and store nothing.
+}
