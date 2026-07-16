@@ -5,13 +5,33 @@ Static Web Apps from this `api/` folder (Node.js v4 programming model).
 
 | Endpoint         | Form            | Table            | Notes                          |
 |------------------|-----------------|------------------|--------------------------------|
-| `POST /api/join`     | /join (3 free sessions) | `dbo.members`  | stored as `member_type='trial'`   |
-| `POST /api/register` | /register       | `dbo.members`    | stored as `member_type='regular'` |
-| `POST /api/contact`  | /contact        | `dbo.contact`    | honeypot-protected             |
-| `POST /api/subscribe`| footer signup   | `dbo.subscriber` | idempotent (MERGE on email)    |
-| `POST /api/token`    | (auth)          | —                | issues a short-lived JWT       |
+| `POST /api/join`       | /join (3 free sessions) | `dbo.members`  | `member_type='trial'`; captcha; auto-subscribes + confirmation email |
+| `POST /api/register`   | /register       | `dbo.members`    | `member_type='regular'`; auto-subscribes + confirmation email |
+| `POST /api/contact`    | /contact        | `dbo.contact`    | honeypot + captcha             |
+| `POST /api/subscribe`  | footer signup   | `dbo.subscriber` | captcha; re-subscribe allowed after unsubscribe |
+| `POST /api/unsubscribe`| /unsubscribe    | `dbo.subscriber` | sets `unsubscribed_at`; always 200 |
+| `POST /api/token`      | (auth)          | —                | issues a short-lived JWT       |
 
-The four form endpoints require a **Bearer JWT** (`Authorization: Bearer <token>`)
+### Behaviour added on top of the basic inserts
+
+- **Duplicate email → 409.** Join, Register, Contact reject an email that already
+  exists in their table; Subscribe rejects an email that is *currently* subscribed
+  (a previously-unsubscribed address may re-subscribe). The response is
+  `409 { code: "email_exists" }`; the frontend shows a popup instead of the
+  thank-you page.
+- **Category normalisation.** Free-text categories ("Adult (17+)", "Jeugd (≤16)",
+  "Thomas More student", …) are stored as `adult` / `junior` / `supporter` /
+  `student`.
+- **Cloudflare Turnstile** guards Join, Subscribe, Contact. Set `TURNSTILE_SECRET`
+  (server) and `TURNSTILE_SITE_KEY` in `forms.js` (public). Verification is skipped
+  when `TURNSTILE_SECRET` is unset (dev). Failure → `403 { code: "captcha_failed" }`.
+- **Confirmation emails** (Join, Register) go out via SMTP (nodemailer). Configure
+  `SMTP_*`; sending is a best-effort no-op when `SMTP_HOST` is unset and never
+  blocks the response.
+- **Auto-subscribe.** A successful Join or Register also subscribes the email to
+  the newsletter (idempotent).
+
+The form endpoints require a **Bearer JWT** (`Authorization: Bearer <token>`)
 and a JSON body. Obtain a token from `POST /api/token` by presenting the client
 credentials (`BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD`) either as a JSON body
 `{ "username": …, "password": … }` or an HTTP Basic header. Tokens are HS256,
@@ -36,7 +56,17 @@ BASIC_AUTH_USER     = kccforms
 BASIC_AUTH_PASSWORD = <strong value — must match CLIENT_PASS in forms.js>
 JWT_SECRET          = <long random secret, min 32 chars — signs the tokens>
 JWT_EXPIRES_IN      = 15m
+TURNSTILE_SECRET    = <Cloudflare Turnstile secret key — blank disables verification>
+SMTP_HOST           = <smtp host — blank disables confirmation emails>
+SMTP_PORT           = 587
+SMTP_SECURE         = false            # true for port 465
+SMTP_USER           = <smtp username>
+SMTP_PASSWORD       = <smtp password>
+SMTP_FROM           = Kempen Cricket Club <contact@kempencricket.be>
 ```
+
+The public Turnstile **site** key is set separately in `public/assets/forms.js`
+(`TURNSTILE_SITE_KEY`), since it ships to the browser.
 
 Copy `local.settings.sample.json` → `local.settings.json` for local runs
 (`npm install && func start` inside `api/`), or `swa start` from the repo root.

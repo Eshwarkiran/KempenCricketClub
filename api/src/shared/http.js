@@ -110,10 +110,65 @@ function langOf(body) {
   return body.lang === "nl" ? "nl" : "en";
 }
 
+/**
+ * Normalise a free-text membership category (EN or NL, e.g. "Adult (17+)",
+ * "Jeugd (≤16)", "Thomas More student", "Steunend lid (€25)") down to a small
+ * canonical set stored in the DB: adult | junior | supporter | student.
+ * Returns null for anything unrecognised.
+ */
+function normalizeCategory(v) {
+  const s = str(v);
+  if (!s) return null;
+  const l = s.toLowerCase();
+  if (l.includes("junior") || l.includes("jeugd")) return "junior";
+  if (l.includes("student")) return "student";
+  if (l.includes("support") || l.includes("steunend")) return "supporter";
+  if (l.includes("adult") || l.includes("volwassene")) return "adult";
+  return null;
+}
+
+/**
+ * Verify a Cloudflare Turnstile token. Resolves to true when the challenge
+ * passed. If TURNSTILE_SECRET is not configured (e.g. local dev / API testing)
+ * verification is skipped and returns true. Turnstile is pass/fail (no score).
+ */
+async function verifyTurnstile(token, remoteIp) {
+  const secret = process.env.TURNSTILE_SECRET;
+  if (!secret) return true; // not configured → don't block (dev / Bruno)
+  if (!token) return false;
+  try {
+    const params = new URLSearchParams({ secret, response: token });
+    if (remoteIp) params.set("remoteip", remoteIp);
+    const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString()
+    });
+    const data = await res.json();
+    return data.success === true;
+  } catch {
+    return false; // fail closed on verifier error
+  }
+}
+
 const ok = { status: 200, jsonBody: { success: true } };
 
 function badRequest(message) {
   return { status: 400, jsonBody: { success: false, error: message } };
 }
 
-module.exports = { requireJwt, signToken, checkClientCredentials, readJson, str, bool, isEmail, dateOrNull, langOf, ok, badRequest };
+/** 409 — used when an email already exists. Carries a machine-readable code. */
+function conflict(message) {
+  return { status: 409, jsonBody: { success: false, error: message, code: "email_exists" } };
+}
+
+/** 403 — used when captcha verification fails. */
+function captchaFailed() {
+  return { status: 403, jsonBody: { success: false, error: "Captcha verification failed", code: "captcha_failed" } };
+}
+
+module.exports = {
+  requireJwt, signToken, checkClientCredentials, readJson,
+  str, bool, isEmail, dateOrNull, langOf, normalizeCategory,
+  verifyTurnstile, ok, badRequest, conflict, captchaFailed
+};
