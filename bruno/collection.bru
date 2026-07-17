@@ -20,4 +20,11 @@ docs {
   ## Variables
   Select the **Local** environment (or create your own) and set `baseUrl`, `clientUser`,
   `clientPass`. `token` is populated automatically.
+
+  ## Notes
+  - **Captcha:** requests send an empty `turnstileToken`. The API skips Cloudflare
+    Turnstile verification when `TURNSTILE_SECRET` is unset (typical for local testing).
+  - **Duplicate emails:** Join, Register, Subscribe and Contact now reject an email
+    that already exists (HTTP 409), so change the `email` in the body between runs
+    or the second call will fail the 200 assertion.
 }

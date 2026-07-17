@@ -1,7 +1,10 @@
 "use strict";
 const { app } = require("@azure/functions");
-const { sql, getPool } = require("../shared/db");
-const { requireJwt, readJson, str, bool, isEmail, langOf, ok, badRequest } = require("../shared/http");
+const { sql, getPool, emailExists } = require("../shared/db");
+const {
+  requireJwt, readJson, str, bool, isEmail, langOf,
+  verifyTurnstile, ok, badRequest, conflict, captchaFailed
+} = require("../shared/http");
 
 app.http("contact", {
   route: "contact",
@@ -16,16 +19,29 @@ app.http("contact", {
     // Honeypot
     if (str(body.botcheck)) return ok;
 
+    // Cloudflare Turnstile
+    const ip = request.headers.get("x-forwarded-for");
+    if (!(await verifyTurnstile(body.turnstileToken, ip))) {
+      return captchaFailed();
+    }
+
     if (!str(body.name) || !isEmail(body.email) || !str(body.message)) {
       return badRequest("name, a valid email and message are required.");
     }
 
+    const email = str(body.email, 255);
+
     try {
+      // Reject duplicates (an email that has contacted before).
+      if (await emailExists("contact", email)) {
+        return conflict("A message from this email already exists.");
+      }
+
       const pool = await getPool();
       await pool
         .request()
         .input("name", sql.NVarChar(150), str(body.name, 150))
-        .input("email", sql.NVarChar(255), str(body.email, 255))
+        .input("email", sql.NVarChar(255), email)
         .input("topic", sql.NVarChar(100), str(body.topic, 100))
         .input("message", sql.NVarChar(sql.MAX), str(body.message, 8000))
         .input("consent", sql.Bit, bool(body.consent))

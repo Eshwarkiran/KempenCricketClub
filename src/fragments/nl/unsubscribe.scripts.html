@@ -1,0 +1,31 @@
+<script>
+(function () {
+  document.addEventListener("DOMContentLoaded", function () {
+    var form = document.getElementById("unsub-form");
+    if (!form) return;
+    var input = document.getElementById("unsub-email");
+    var msg = document.getElementById("unsub-msg");
+    var btn = form.querySelector("button");
+    var M = {
+      ok: "Je bent uitgeschreven. Je ontvangt geen nieuwsbrieven meer van ons.",
+      invalid: "Voer een geldig e-mailadres in.",
+      fail: "Sorry, er ging iets mis. Mail contact@kempencricket.be."
+    };
+    try {
+      var q = new URLSearchParams(window.location.search).get("email");
+      if (q) input.value = q;
+    } catch (e) {}
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var email = (input.value || "").trim();
+      if (!email || email.indexOf("@") < 1) { msg.textContent = M.invalid; return; }
+      if (!window.KCC || !window.KCC.apiFetch) { msg.textContent = M.fail; return; }
+      btn.disabled = true; msg.textContent = "…";
+      window.KCC.apiFetch("/api/unsubscribe", { email: email })
+        .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json().catch(function () { return {}; }); })
+        .then(function () { msg.textContent = M.ok; btn.textContent = "Klaar"; })
+        .catch(function () { msg.textContent = M.fail; btn.disabled = false; });
+    });
+  });
+})();
+</script>

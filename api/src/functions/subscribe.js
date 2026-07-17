@@ -1,7 +1,10 @@
 "use strict";
 const { app } = require("@azure/functions");
 const { sql, getPool } = require("../shared/db");
-const { requireJwt, readJson, str, isEmail, langOf, ok, badRequest } = require("../shared/http");
+const {
+  requireJwt, readJson, str, isEmail, langOf,
+  verifyTurnstile, ok, badRequest, conflict, captchaFailed
+} = require("../shared/http");
 
 app.http("subscribe", {
   route: "subscribe",
@@ -13,16 +16,35 @@ app.http("subscribe", {
 
     const body = await readJson(request);
 
+    // Cloudflare Turnstile
+    const ip = request.headers.get("x-forwarded-for");
+    if (!(await verifyTurnstile(body.turnstileToken, ip))) {
+      return captchaFailed();
+    }
+
     if (!isEmail(body.email)) {
       return badRequest("A valid email is required.");
     }
 
+    const email = str(body.email, 255).toLowerCase();
+
     try {
       const pool = await getPool();
-      // Idempotent: re-subscribing an existing address just clears unsubscribed_at.
+
+      // Reject an address that is already an ACTIVE subscriber. A previously
+      // unsubscribed address is allowed to re-subscribe (otherwise unsubscribing
+      // would be permanent), which the MERGE below reactivates.
+      const existing = await pool
+        .request()
+        .input("email", sql.NVarChar(255), email)
+        .query("SELECT TOP 1 unsubscribed_at FROM dbo.subscriber WHERE LOWER(email) = @email");
+      if (existing.recordset.length && existing.recordset[0].unsubscribed_at === null) {
+        return conflict("This email is already subscribed.");
+      }
+
       await pool
         .request()
-        .input("email", sql.NVarChar(255), str(body.email, 255).toLowerCase())
+        .input("email", sql.NVarChar(255), email)
         .input("lang", sql.Char(2), langOf(body))
         .query(`
           MERGE dbo.subscriber AS t

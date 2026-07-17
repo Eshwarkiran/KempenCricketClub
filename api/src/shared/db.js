@@ -49,4 +49,21 @@ function getPool() {
   return poolPromise;
 }
 
-module.exports = { sql, getPool };
+/**
+ * Case-insensitive check for whether an email already exists in a given table.
+ * `table` must be one of the allow-listed names below (never interpolate raw
+ * user input into SQL). Returns true/false.
+ */
+async function emailExists(table, email) {
+  const allowed = { members: "dbo.members", subscriber: "dbo.subscriber", contact: "dbo.contact" };
+  const target = allowed[table];
+  if (!target) throw new Error("emailExists: unknown table " + table);
+  const pool = await getPool();
+  const result = await pool
+    .request()
+    .input("email", sql.NVarChar(255), email)
+    .query(`SELECT TOP 1 1 AS hit FROM ${target} WHERE LOWER(email) = LOWER(@email)`);
+  return result.recordset.length > 0;
+}
+
+module.exports = { sql, getPool, emailExists };
