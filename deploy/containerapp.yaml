@@ -1,0 +1,99 @@
+# Azure Container App spec — Kempen Cricket Club (web + api in one app).
+#
+# This is a TEMPLATE. The GitHub Actions workflow substitutes every placeholder
+# with envsubst (values come from GitHub environment secrets/variables), writing a
+# rendered file that is applied with:
+#     az containerapp create|update --name <app> --resource-group <rg> --yaml <file>
+#
+# The web (nginx) container is the ingress target on port 80 and proxies /api to
+# the api (Functions) container over localhost:8080 (same pod, shared network).
+# Image pull uses the app's system-assigned managed identity (needs AcrPull on
+# the registry — see deploy/README.md).
+
+location: ${AZURE_LOCATION}
+identity:
+  type: SystemAssigned
+properties:
+  managedEnvironmentId: ${MANAGED_ENVIRONMENT_ID}
+  configuration:
+    activeRevisionsMode: Single
+    ingress:
+      external: true
+      targetPort: 80
+      transport: auto
+      allowInsecure: false
+      traffic:
+        - latestRevision: true
+          weight: 100
+    registries:
+      - server: ${ACR_LOGIN_SERVER}
+        identity: system
+    secrets:
+      - name: sql-password
+        value: "${SQL_PASSWORD}"
+      - name: basic-auth-password
+        value: "${BASIC_AUTH_PASSWORD}"
+      - name: jwt-secret
+        value: "${JWT_SECRET}"
+      - name: turnstile-secret
+        value: "${TURNSTILE_SECRET}"
+      - name: smtp-password
+        value: "${SMTP_PASSWORD}"
+  template:
+    containers:
+      # --- nginx: serves the Astro build, proxies /api to the api container ---
+      - name: web
+        image: ${WEB_IMAGE}
+        resources:
+          cpu: 0.25
+          memory: 0.5Gi
+        env:
+          - name: API_UPSTREAM
+            value: localhost:8080
+
+      # --- Azure Functions API (listens on 8080) ---
+      - name: api
+        image: ${API_IMAGE}
+        resources:
+          cpu: 0.5
+          memory: 1.0Gi
+        env:
+          - name: FUNCTIONS_WORKER_RUNTIME
+            value: node
+          - name: AzureWebJobsStorage
+            value: ""
+          - name: SQL_SERVER
+            value: "${SQL_SERVER}"
+          - name: SQL_DATABASE
+            value: "${SQL_DATABASE}"
+          - name: SQL_USER
+            value: "${SQL_USER}"
+          - name: SQL_PASSWORD
+            secretRef: sql-password
+          - name: SQL_TRUST_CERT
+            value: "${SQL_TRUST_CERT}"
+          - name: BASIC_AUTH_USER
+            value: "${BASIC_AUTH_USER}"
+          - name: BASIC_AUTH_PASSWORD
+            secretRef: basic-auth-password
+          - name: JWT_SECRET
+            secretRef: jwt-secret
+          - name: JWT_EXPIRES_IN
+            value: "${JWT_EXPIRES_IN}"
+          - name: TURNSTILE_SECRET
+            secretRef: turnstile-secret
+          - name: SMTP_HOST
+            value: "${SMTP_HOST}"
+          - name: SMTP_PORT
+            value: "${SMTP_PORT}"
+          - name: SMTP_SECURE
+            value: "${SMTP_SECURE}"
+          - name: SMTP_USER
+            value: "${SMTP_USER}"
+          - name: SMTP_PASSWORD
+            secretRef: smtp-password
+          - name: SMTP_FROM
+            value: "${SMTP_FROM}"
+    scale:
+      minReplicas: 1
+      maxReplicas: 3
