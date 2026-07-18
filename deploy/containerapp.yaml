@@ -39,6 +39,8 @@ properties:
         value: "${TURNSTILE_SECRET}"
       - name: smtp-password
         value: "${SMTP_PASSWORD}"
+      - name: ms-client-secret
+        value: "${MS_CLIENT_SECRET}"
   template:
     containers:
       # --- nginx: serves the Astro build, proxies /api to the api container ---
@@ -82,18 +84,28 @@ properties:
             value: "${JWT_EXPIRES_IN}"
           - name: TURNSTILE_SECRET
             secretRef: turnstile-secret
+          - name: SITE_URL
+            value: "${SITE_URL}"
           - name: SMTP_HOST
             value: "${SMTP_HOST}"
           - name: SMTP_PORT
             value: "${SMTP_PORT}"
           - name: SMTP_SECURE
             value: "${SMTP_SECURE}"
+          - name: SMTP_AUTH_TYPE
+            value: "${SMTP_AUTH_TYPE}"
           - name: SMTP_USER
             value: "${SMTP_USER}"
           - name: SMTP_PASSWORD
             secretRef: smtp-password
           - name: SMTP_FROM
             value: "${SMTP_FROM}"
+          - name: MS_TENANT_ID
+            value: "${MS_TENANT_ID}"
+          - name: MS_CLIENT_ID
+            value: "${MS_CLIENT_ID}"
+          - name: MS_CLIENT_SECRET
+            secretRef: ms-client-secret
     scale:
       minReplicas: 1
       maxReplicas: 3

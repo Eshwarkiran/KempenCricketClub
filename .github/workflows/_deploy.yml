@@ -64,19 +64,24 @@ jobs:
           SQL_TRUST_CERT: ${{ vars.SQL_TRUST_CERT }}
           BASIC_AUTH_USER: ${{ vars.BASIC_AUTH_USER }}
           JWT_EXPIRES_IN: ${{ vars.JWT_EXPIRES_IN }}
+          SITE_URL: ${{ vars.SITE_URL }}
           SMTP_HOST: ${{ vars.SMTP_HOST }}
           SMTP_PORT: ${{ vars.SMTP_PORT }}
           SMTP_SECURE: ${{ vars.SMTP_SECURE }}
+          SMTP_AUTH_TYPE: ${{ vars.SMTP_AUTH_TYPE }}
           SMTP_USER: ${{ vars.SMTP_USER }}
           SMTP_FROM: ${{ vars.SMTP_FROM }}
+          MS_TENANT_ID: ${{ vars.MS_TENANT_ID }}
+          MS_CLIENT_ID: ${{ vars.MS_CLIENT_ID }}
           SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
           BASIC_AUTH_PASSWORD: ${{ secrets.BASIC_AUTH_PASSWORD }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           TURNSTILE_SECRET: ${{ secrets.TURNSTILE_SECRET }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          MS_CLIENT_SECRET: ${{ secrets.MS_CLIENT_SECRET }}
         run: |
           export API_IMAGE WEB_IMAGE
-          VARS='${AZURE_LOCATION} ${MANAGED_ENVIRONMENT_ID} ${ACR_LOGIN_SERVER} ${API_IMAGE} ${WEB_IMAGE} ${SQL_SERVER} ${SQL_DATABASE} ${SQL_USER} ${SQL_PASSWORD} ${SQL_TRUST_CERT} ${BASIC_AUTH_USER} ${BASIC_AUTH_PASSWORD} ${JWT_SECRET} ${JWT_EXPIRES_IN} ${TURNSTILE_SECRET} ${SMTP_HOST} ${SMTP_PORT} ${SMTP_SECURE} ${SMTP_USER} ${SMTP_PASSWORD} ${SMTP_FROM}'
+          VARS='${AZURE_LOCATION} ${MANAGED_ENVIRONMENT_ID} ${ACR_LOGIN_SERVER} ${API_IMAGE} ${WEB_IMAGE} ${SQL_SERVER} ${SQL_DATABASE} ${SQL_USER} ${SQL_PASSWORD} ${SQL_TRUST_CERT} ${BASIC_AUTH_USER} ${BASIC_AUTH_PASSWORD} ${JWT_SECRET} ${JWT_EXPIRES_IN} ${TURNSTILE_SECRET} ${SITE_URL} ${SMTP_HOST} ${SMTP_PORT} ${SMTP_SECURE} ${SMTP_AUTH_TYPE} ${SMTP_USER} ${SMTP_PASSWORD} ${SMTP_FROM} ${MS_TENANT_ID} ${MS_CLIENT_ID} ${MS_CLIENT_SECRET}'
           envsubst "$VARS" < deploy/containerapp.yaml > rendered.yaml
           echo "Rendered spec (secrets omitted):"
           grep -vE 'password|secret|PASSWORD|SECRET' rendered.yaml || true
