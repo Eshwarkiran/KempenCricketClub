@@ -10,6 +10,8 @@
 # Image pull uses the app's system-assigned managed identity (needs AcrPull on
 # the registry — see deploy/README.md).
 
+name: ${CONTAINERAPP_NAME}
+type: Microsoft.App/containerApps
 location: ${AZURE_LOCATION}
 identity:
   type: SystemAssigned
