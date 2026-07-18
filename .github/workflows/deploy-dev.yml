@@ -1,0 +1,18 @@
+# Deploy to the DEV environment on every push to the dev branch.
+name: deploy-dev
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:   # allow manual runs
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/_deploy.yml
+    with:
+      environment: dev
+    secrets: inherit

@@ -2,8 +2,8 @@
 #   cp .env.sample .env      # then fill in real values (.env is gitignored)
 #   docker compose up --build
 #
-# Open the site at  http://localhost:8080  — nginx serves the Astro site and
-# proxies /api/* to the Functions container, so the forms work end to end.
+# Open the site at  http://localhost  — nginx serves the Astro site and proxies
+# /api/* to the Functions container (which listens on 8080, matching prod).
 services:
   api:
     build:
@@ -13,15 +13,15 @@ services:
     platform: linux/amd64
     restart: unless-stopped
     expose:
-      - "80"                 # reachable to nginx as http://api:80 (not published)
+      - "8080"                # reachable to nginx as http://api:8080 (not published)
     ports:
       # Optional: direct API access for debugging / Bruno at http://localhost:7071
-      - "7071:80"
+      - "7071:8080"
     env_file:
       - .env
     healthcheck:
       # /api/token returns 401 without credentials, which still proves the app is up.
-      test: ["CMD", "sh", "-c", "wget -q -O- --post-data='{}' --header='Content-Type: application/json' http://localhost:80/api/token || exit 1"]
+      test: ["CMD", "sh", "-c", "wget -q -O- --post-data='{}' --header='Content-Type: application/json' http://localhost:8080/api/token || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -33,7 +33,10 @@ services:
       dockerfile: web.Dockerfile
     image: kcc-web
     restart: unless-stopped
+    environment:
+      # Separate containers here, so reach the api by its compose service name.
+      - API_UPSTREAM=api:8080
     ports:
-      - "80:80"              # public entry point — open http://localhost
+      - "80:80"               # public entry point — open http://localhost
     depends_on:
       - api

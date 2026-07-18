@@ -1,0 +1,97 @@
+# Reusable deploy workflow: build both images, push to ACR, deploy the Container
+# App. Called by deploy-dev.yml (dev branch) and deploy-prod.yml (main branch).
+# Secrets/variables resolve from the GitHub Environment named by `environment`.
+name: deploy (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: GitHub Environment (dev | prod)
+        required: true
+        type: string
+
+permissions:
+  id-token: write     # required for OIDC login to Azure
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Set image tags
+        id: tags
+        run: |
+          TAG="${{ inputs.environment }}-${GITHUB_SHA::12}"
+          echo "API_IMAGE=${{ vars.ACR_LOGIN_SERVER }}/kcc-api:${TAG}" >> "$GITHUB_ENV"
+          echo "WEB_IMAGE=${{ vars.ACR_LOGIN_SERVER }}/kcc-web:${TAG}" >> "$GITHUB_ENV"
+
+      - name: ACR login
+        run: az acr login --name ${{ vars.ACR_NAME }}
+
+      - name: Build & push api image
+        run: |
+          docker build -t "$API_IMAGE" ./api
+          docker push "$API_IMAGE"
+
+      - name: Build & push web image
+        run: |
+          docker build -f web.Dockerfile \
+            --build-arg TURNSTILE_SITE_KEY="${{ vars.TURNSTILE_SITE_KEY }}" \
+            --build-arg CLIENT_USER="${{ vars.CLIENT_USER }}" \
+            --build-arg CLIENT_PASS="${{ secrets.CLIENT_PASS }}" \
+            -t "$WEB_IMAGE" .
+          docker push "$WEB_IMAGE"
+
+      - name: Render Container App spec
+        env:
+          AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+          MANAGED_ENVIRONMENT_ID: ${{ vars.MANAGED_ENVIRONMENT_ID }}
+          ACR_LOGIN_SERVER: ${{ vars.ACR_LOGIN_SERVER }}
+          SQL_SERVER: ${{ vars.SQL_SERVER }}
+          SQL_DATABASE: ${{ vars.SQL_DATABASE }}
+          SQL_USER: ${{ vars.SQL_USER }}
+          SQL_TRUST_CERT: ${{ vars.SQL_TRUST_CERT }}
+          BASIC_AUTH_USER: ${{ vars.BASIC_AUTH_USER }}
+          JWT_EXPIRES_IN: ${{ vars.JWT_EXPIRES_IN }}
+          SMTP_HOST: ${{ vars.SMTP_HOST }}
+          SMTP_PORT: ${{ vars.SMTP_PORT }}
+          SMTP_SECURE: ${{ vars.SMTP_SECURE }}
+          SMTP_USER: ${{ vars.SMTP_USER }}
+          SMTP_FROM: ${{ vars.SMTP_FROM }}
+          SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
+          BASIC_AUTH_PASSWORD: ${{ secrets.BASIC_AUTH_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          TURNSTILE_SECRET: ${{ secrets.TURNSTILE_SECRET }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+        run: |
+          export API_IMAGE WEB_IMAGE
+          VARS='${AZURE_LOCATION} ${MANAGED_ENVIRONMENT_ID} ${ACR_LOGIN_SERVER} ${API_IMAGE} ${WEB_IMAGE} ${SQL_SERVER} ${SQL_DATABASE} ${SQL_USER} ${SQL_PASSWORD} ${SQL_TRUST_CERT} ${BASIC_AUTH_USER} ${BASIC_AUTH_PASSWORD} ${JWT_SECRET} ${JWT_EXPIRES_IN} ${TURNSTILE_SECRET} ${SMTP_HOST} ${SMTP_PORT} ${SMTP_SECURE} ${SMTP_USER} ${SMTP_PASSWORD} ${SMTP_FROM}'
+          envsubst "$VARS" < deploy/containerapp.yaml > rendered.yaml
+          echo "Rendered spec (secrets omitted):"
+          grep -vE 'password|secret|PASSWORD|SECRET' rendered.yaml || true
+
+      - name: Deploy Container App (create or update)
+        run: |
+          APP="${{ vars.CONTAINERAPP_NAME }}"
+          RG="${{ vars.AZURE_RESOURCE_GROUP }}"
+          if az containerapp show -n "$APP" -g "$RG" >/dev/null 2>&1; then
+            az containerapp update -n "$APP" -g "$RG" --yaml rendered.yaml
+          else
+            az containerapp create -n "$APP" -g "$RG" --yaml rendered.yaml
+          fi
+
+      - name: Show app URL
+        run: |
+          az containerapp show -n "${{ vars.CONTAINERAPP_NAME }}" -g "${{ vars.AZURE_RESOURCE_GROUP }}" \
+            --query "properties.configuration.ingress.fqdn" -o tsv
