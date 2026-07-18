@@ -110,7 +110,8 @@ following on **each** environment.
 | `BASIC_AUTH_PASSWORD` | Client credential; must match `CLIENT_PASS` below |
 | `JWT_SECRET` | Long random, 32+ chars |
 | `TURNSTILE_SECRET` | Cloudflare Turnstile secret key |
-| `SMTP_PASSWORD` | SMTP / app password |
+| `SMTP_PASSWORD` | SMTP password (leave empty when using M365 OAuth2) |
+| `MS_CLIENT_SECRET` | Entra app client secret (only for `SMTP_AUTH_TYPE=oauth2`) |
 | `CLIENT_PASS` | Public client password baked into forms.js (kept in secrets so it isn't printed in logs) |
 
 ### Variables (non-sensitive)
@@ -131,7 +132,10 @@ following on **each** environment.
 | `JWT_EXPIRES_IN` | `15m` |
 | `TURNSTILE_SITE_KEY` | real site key (public) |
 | `CLIENT_USER` | `KccFormsController` |
+| `SITE_URL` | `https://kempencricket.be` (builds unsubscribe links) |
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_SECURE` / `SMTP_USER` / `SMTP_FROM` | mail config |
+| `SMTP_AUTH_TYPE` | `basic` or `oauth2` (Microsoft 365) |
+| `MS_TENANT_ID` / `MS_CLIENT_ID` | Entra app (only for `oauth2`) |
 
 Values can differ per environment (e.g. dev vs prod DB, dev vs prod Turnstile keys).
 
@@ -152,7 +156,36 @@ Trigger a deploy manually from the Actions tab (`workflow_dispatch`) too.
 
 ---
 
-## 4. Notes
+## 4. Microsoft 365 email (OAuth2)
+
+Microsoft is retiring Basic auth / app passwords for SMTP AUTH, so M365 sending
+uses **OAuth2 (XOAUTH2)** with an Entra app and client credentials.
+
+1. Entra admin center → App registrations → **New registration** (e.g. `kcc-mailer`).
+2. **API permissions** → Add → APIs my organization uses → *Office 365 Exchange
+   Online* → Application permissions → **SMTP.SendAsApp** → then **Grant admin
+   consent**.
+3. **Certificates & secrets** → New client secret → copy the value.
+4. Allow the app to send as the mailbox (Exchange Online PowerShell):
+
+   ```powershell
+   New-ServicePrincipal -AppId <MS_CLIENT_ID> -ObjectId <enterprise-app-object-id>
+   Add-MailboxPermission -Identity "contact@kempencricket.be" `
+     -User <enterprise-app-object-id> -AccessRights FullAccess
+   ```
+
+5. Ensure SMTP AUTH is enabled for that mailbox
+   (`Set-CASMailbox -Identity contact@kempencricket.be -SmtpClientAuthenticationDisabled $false`).
+
+Then set: `SMTP_AUTH_TYPE=oauth2`, `SMTP_HOST=smtp.office365.com`,
+`SMTP_PORT=587`, `SMTP_SECURE=false`, `SMTP_USER=contact@kempencricket.be`,
+`SMTP_FROM=Kempen Cricket Club <contact@kempencricket.be>`, plus `MS_TENANT_ID`,
+`MS_CLIENT_ID` and the `MS_CLIENT_SECRET` secret. Leave `SMTP_PASSWORD` empty.
+
+For any other provider (Gmail, Mailgun, Brevo…), keep `SMTP_AUTH_TYPE=basic`
+and use `SMTP_USER` / `SMTP_PASSWORD`.
+
+## 5. Notes
 
 - The api and web containers share a network namespace in one app, so the api
   listens on **8080** (`ASPNETCORE_URLS`) and nginx proxies to `localhost:8080`

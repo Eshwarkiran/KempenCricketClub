@@ -1,25 +1,85 @@
 "use strict";
 const nodemailer = require("nodemailer");
+const { signUnsubToken } = require("./http");
 
-let transporter;
+/**
+ * Two auth modes, chosen with SMTP_AUTH_TYPE:
+ *   "basic"  (default) — SMTP_USER / SMTP_PASSWORD. Works with Gmail, Mailgun,
+ *                        Brevo, etc.
+ *   "oauth2"           — Microsoft 365 XOAUTH2 via Entra client credentials.
+ *                        Required because M365 is retiring Basic auth / app
+ *                        passwords for SMTP AUTH. Needs MS_TENANT_ID,
+ *                        MS_CLIENT_ID, MS_CLIENT_SECRET and SMTP_USER (the
+ *                        sending mailbox).
+ */
 
-/** Lazily build one SMTP transport. Returns null when SMTP is not configured. */
-function getTransport() {
-  if (transporter !== undefined) return transporter;
+let basicTransport;          // cached transport for basic auth
+let tokenCache = { value: null, expiresAt: 0 };
+
+function isOAuth2() {
+  return (process.env.SMTP_AUTH_TYPE || "basic").toLowerCase() === "oauth2";
+}
+
+/** Fetch (and cache) an Entra access token for Outlook SMTP. */
+async function getAccessToken() {
+  if (tokenCache.value && Date.now() < tokenCache.expiresAt) return tokenCache.value;
+  const tenant = process.env.MS_TENANT_ID;
+  const clientId = process.env.MS_CLIENT_ID;
+  const clientSecret = process.env.MS_CLIENT_SECRET;
+  if (!tenant || !clientId || !clientSecret) return null;
+
+  const body = new URLSearchParams({
+    client_id: clientId,
+    client_secret: clientSecret,
+    grant_type: "client_credentials",
+    scope: "https://outlook.office365.com/.default"
+  });
+  const res = await fetch(`https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: body.toString()
+  });
+  if (!res.ok) return null;
+  const data = await res.json();
+  if (!data.access_token) return null;
+  tokenCache = {
+    value: data.access_token,
+    // refresh a minute early
+    expiresAt: Date.now() + Math.max((Number(data.expires_in) || 3600) - 60, 30) * 1000
+  };
+  return tokenCache.value;
+}
+
+/** Build a transport. Returns null when mail is not configured. */
+async function getTransport() {
   const host = process.env.SMTP_HOST;
-  if (!host) {
-    transporter = null; // not configured → mail sending is a no-op
-    return transporter;
-  }
-  transporter = nodemailer.createTransport({
+  if (!host) return null; // not configured → mail sending is a no-op
+
+  const common = {
     host,
     port: Number(process.env.SMTP_PORT || 587),
-    secure: process.env.SMTP_SECURE === "true", // true for 465, false for 587/STARTTLS
-    auth: process.env.SMTP_USER
-      ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD }
-      : undefined
-  });
-  return transporter;
+    secure: process.env.SMTP_SECURE === "true" // true for 465, false for 587/STARTTLS
+  };
+
+  if (isOAuth2()) {
+    const accessToken = await getAccessToken();
+    if (!accessToken) return null;
+    // A fresh transport per token keeps the XOAUTH2 credential current.
+    return nodemailer.createTransport({
+      ...common,
+      auth: { type: "OAuth2", user: process.env.SMTP_USER, accessToken }
+    });
+  }
+
+  if (!basicTransport) {
+    basicTransport = nodemailer.createTransport({
+      ...common,
+      auth: process.env.SMTP_USER
+        ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD }
+        : undefined
+    });
+  }
+  return basicTransport;
 }
 
 // Localised confirmation copy. `kind` is "join" or "register".
@@ -40,7 +100,8 @@ const COPY = {
         "Thanks for registering as a member of Kempen Cricket Club. " +
         "We've received your registration and will confirm your details and the next steps, including how to pay your membership fee.\n\n" +
         "Welcome to the club!\n\nKempen Cricket Club\ncontact@kempencricket.be"
-    }
+    },
+    unsubLine: (url) => `\n\n---\nDon't want club emails? Unsubscribe: ${url}\n`
   },
   nl: {
     join: {
@@ -58,25 +119,57 @@ const COPY = {
         "Bedankt voor je registratie als lid van Kempen Cricket Club. " +
         "We hebben je registratie ontvangen en bevestigen binnenkort je gegevens en de volgende stappen.\n\n" +
         "Welkom bij de club!\n\nKempen Cricket Club\ncontact@kempencricket.be"
-    }
+    },
+    unsubLine: (url) => `\n\n---\nGeen clubmails meer? Uitschrijven: ${url}\n`
   }
 };
+
+/** Build the unsubscribe URLs (page link + one-click POST endpoint). */
+function unsubUrls(email, lang) {
+  const site = (process.env.SITE_URL || "").replace(/\/+$/, "");
+  const token = signUnsubToken(email);
+  if (!site || !token) return null;
+  const q = `email=${encodeURIComponent(email)}&t=${encodeURIComponent(token)}`;
+  return {
+    page: `${site}${lang === "nl" ? "/nl" : ""}/unsubscribe/?${q}`,
+    oneClick: `${site}/api/unsubscribe/one-click?${q}`
+  };
+}
 
 /**
  * Send a confirmation email. Never throws — returns true/false so a mail
  * failure can't break the form submission. Caller should log the result.
  */
 async function sendConfirmation({ to, name, kind, lang }) {
-  const t = getTransport();
-  if (!t) return false; // SMTP not configured
+  let t;
+  try {
+    t = await getTransport();
+  } catch {
+    return false;
+  }
+  if (!t) return false; // SMTP not configured / token unavailable
+
   const copy = (COPY[lang] || COPY.en)[kind];
   if (!copy) return false;
+
+  const urls = unsubUrls(to, lang);
+  const headers = urls
+    ? {
+        // RFC 8058 one-click unsubscribe — expected by Gmail/Yahoo bulk rules.
+        "List-Unsubscribe": `<${urls.oneClick}>, <${urls.page}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
+      }
+    : undefined;
+
+  const text = copy.body(name) + (urls ? (COPY[lang] || COPY.en).unsubLine(urls.page) : "");
+
   try {
     await t.sendMail({
       from: process.env.SMTP_FROM || "Kempen Cricket Club <contact@kempencricket.be>",
       to,
       subject: copy.subject,
-      text: copy.body(name)
+      text,
+      headers
     });
     return true;
   } catch {

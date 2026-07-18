@@ -157,6 +157,27 @@ function badRequest(message) {
   return { status: 400, jsonBody: { success: false, error: message } };
 }
 
+/**
+ * Sign an unsubscribe token for an email (HMAC-SHA256 over the lowercased
+ * address, keyed by JWT_SECRET). Lets one-click unsubscribe links work without
+ * a Bearer token, while still being unforgeable.
+ */
+function signUnsubToken(email) {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) return null;
+  return crypto
+    .createHmac("sha256", secret)
+    .update(String(email).trim().toLowerCase())
+    .digest("base64url");
+}
+
+/** Constant-time verification of an unsubscribe token. */
+function verifyUnsubToken(email, token) {
+  const expected = signUnsubToken(email);
+  if (!expected || !token) return false;
+  return safeEqual(String(token), expected);
+}
+
 /** 409 — used when an email already exists. Carries a machine-readable code. */
 function conflict(message) {
   return { status: 409, jsonBody: { success: false, error: message, code: "email_exists" } };
@@ -170,5 +191,6 @@ function captchaFailed() {
 module.exports = {
   requireJwt, signToken, checkClientCredentials, readJson,
   str, bool, isEmail, dateOrNull, langOf, normalizeCategory,
-  verifyTurnstile, ok, badRequest, conflict, captchaFailed
+  verifyTurnstile, signUnsubToken, verifyUnsubToken,
+  ok, badRequest, conflict, captchaFailed
 };

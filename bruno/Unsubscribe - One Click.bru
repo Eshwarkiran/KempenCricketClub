@@ -1,0 +1,37 @@
+meta {
+  name: Unsubscribe — One Click (signed link)
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/unsubscribe/one-click?email={{unsubEmail}}&t={{unsubToken}}
+  body: none
+  auth: none
+}
+
+params:query {
+  email: {{unsubEmail}}
+  t: {{unsubToken}}
+}
+
+tests {
+  test("200 OK", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}
+
+docs {
+  RFC 8058 one-click unsubscribe, called directly by mail clients from the
+  List-Unsubscribe header — so it is intentionally NOT behind the Bearer JWT.
+  Authenticity comes from `t`, an HMAC-SHA256 of the lowercased email keyed by
+  JWT_SECRET.
+
+  To try it, set the `unsubEmail` / `unsubToken` environment variables using a
+  link from a real confirmation email, or generate one:
+
+      node -e 'console.log(require("crypto").createHmac("sha256", process.env.JWT_SECRET).update("you@example.com").digest("base64url"))'
+
+  An invalid or missing token returns 400. GET on the same URL returns a small
+  HTML confirmation page for humans who click the link.
+}
