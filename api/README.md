@@ -14,9 +14,11 @@ Static Web Apps from this `api/` folder (Node.js v4 programming model).
 
 ### Behaviour added on top of the basic inserts
 
-- **Duplicate email → 409.** Join, Register, Contact reject an email that already
+- **Duplicate email → 409.** Join and Contact reject an email that already
   exists in their table; Subscribe rejects an email that is *currently* subscribed
-  (a previously-unsubscribed address may re-subscribe). The response is
+  (a previously-unsubscribed address may re-subscribe). Register rejects only an
+  email that is already a **regular** member — a trial member (from /join) may
+  register as a regular member with the same email. The response is
   `409 { code: "email_exists" }`; the frontend shows a popup instead of the
   thank-you page.
 - **Category normalisation.** Free-text categories ("Adult (17+)", "Jeugd (≤16)",

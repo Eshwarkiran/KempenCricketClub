@@ -66,4 +66,21 @@ async function emailExists(table, email) {
   return result.recordset.length > 0;
 }
 
-module.exports = { sql, getPool, emailExists };
+/**
+ * Case-insensitive check for whether a member of a specific member_type exists
+ * (e.g. "regular" or "trial"). Lets a trial member register as a regular member
+ * with the same email, while still blocking a second regular registration.
+ */
+async function memberExists(email, memberType) {
+  const pool = await getPool();
+  const result = await pool
+    .request()
+    .input("email", sql.NVarChar(255), email)
+    .input("member_type", sql.VarChar(10), memberType)
+    .query(
+      "SELECT TOP 1 1 AS hit FROM dbo.members WHERE LOWER(email) = LOWER(@email) AND member_type = @member_type"
+    );
+  return result.recordset.length > 0;
+}
+
+module.exports = { sql, getPool, emailExists, memberExists };
