@@ -45,6 +45,9 @@ const canonicalUrl = `${origin}${selfPath}`;
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Hanken+Grotesk:wght@400;600&family=Geist+Mono:wght@500&display=swap" rel="stylesheet" />
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="/styles.css" />
+  <!-- Enables the reveal-on-scroll animation. Set before first paint so there
+       is no flash; if JS is off, .reveal content simply stays visible. -->
+  <script is:inline>document.documentElement.classList.add('js')</script>
 </head>
 <body>
   <Header lang={lang} path={path} />
@@ -53,10 +56,33 @@ const canonicalUrl = `${origin}${selfPath}`;
   </main>
   <Footer lang={lang} />
   <script is:inline>
-    /* reveal-on-scroll */
+    /* reveal-on-scroll.
+       Content starts at opacity:0, so this must never fail to run — a section
+       taller than the viewport can never reach a fractional threshold, which
+       used to leave long pages (e.g. /learn-cricket) blank on mobile.
+       Hence threshold:0 plus a belt-and-braces reveal-everything fallback. */
     (function(){
-      var obs=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');obs.unobserve(e.target);}})},{threshold:0.12});
-      document.querySelectorAll('.reveal').forEach(function(el){obs.observe(el);});
+      var els=[].slice.call(document.querySelectorAll('.reveal'));
+      function showAll(){els.forEach(function(el){el.classList.add('in');});}
+      var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if(reduce||!('IntersectionObserver' in window)){showAll();return;}
+      try{
+        var obs=new IntersectionObserver(function(es){
+          es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');obs.unobserve(e.target);}});
+        },{threshold:0,rootMargin:'0px 0px -8% 0px'});
+        els.forEach(function(el){obs.observe(el);});
+      }catch(err){showAll();return;}
+      /* Safety net: if anything is still hidden shortly after load, show it
+         rather than leaving the visitor with a blank page. */
+      window.addEventListener('load',function(){
+        setTimeout(function(){
+          els.forEach(function(el){
+            if(el.classList.contains('in'))return;
+            var r=el.getBoundingClientRect();
+            if(r.top<window.innerHeight*1.5)el.classList.add('in');
+          });
+        },600);
+      });
     })();
     /* mobile menu toggle */
     (function(){

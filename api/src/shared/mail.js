@@ -39,9 +39,13 @@ async function getAccessToken() {
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: body.toString()
   });
-  if (!res.ok) return null;
-  const data = await res.json();
-  if (!data.access_token) return null;
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || !data.access_token) {
+    // Surface the AADSTS code (e.g. AADSTS7000215 = bad client secret).
+    // The secret itself is never logged.
+    console.error("mail: OAuth2 token request failed:", data.error, data.error_description);
+    return null;
+  }
   tokenCache = {
     value: data.access_token,
     // refresh a minute early
@@ -144,7 +148,8 @@ async function sendConfirmation({ to, name, kind, lang }) {
   let t;
   try {
     t = await getTransport();
-  } catch {
+  } catch (err) {
+    console.error("mail: transport creation failed:", err && err.message);
     return false;
   }
   if (!t) return false; // SMTP not configured / token unavailable
@@ -172,7 +177,10 @@ async function sendConfirmation({ to, name, kind, lang }) {
       headers
     });
     return true;
-  } catch {
+  } catch (err) {
+    // SMTP-level reason, e.g. EAUTH "535 5.7.3 Authentication unsuccessful"
+    // or "SmtpClientAuthentication is disabled for the Tenant".
+    console.error("mail: sendMail failed:", err && err.code, err && err.message);
     return false;
   }
 }

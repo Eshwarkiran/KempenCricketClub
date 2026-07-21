@@ -99,10 +99,10 @@
       <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off" style="display:none">
       <div class="field">
         <label>I'm signing up as</label>
-        <div class="radios">
-          <label><input type="radio" name="category" value="Junior (≤16)" checked> Junior (≤16)</label>
-          <label><input type="radio" name="category" value="Adult (17+)"> Adult (17+)</label>
-          <label><input type="radio" name="category" value="Supporter"> Supporter</label>
+        <div class="pills pills--3">
+          <div class="pill"><input type="radio" id="join-cat-junior" name="category" value="Junior (≤16)" checked><label for="join-cat-junior">Junior <small>≤16</small></label></div>
+          <div class="pill"><input type="radio" id="join-cat-adult" name="category" value="Adult (17+)"><label for="join-cat-adult">Adult <small>17+</small></label></div>
+          <div class="pill"><input type="radio" id="join-cat-supporter" name="category" value="Supporter"><label for="join-cat-supporter">Supporter <small>non-playing</small></label></div>
         </div>
       </div>
       <div class="frow">
