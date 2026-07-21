@@ -34,6 +34,9 @@ ENVNAME=kcc-cae            # Container Apps environment
 APP=kcc-dev                # kcc-dev for dev, kcc-prod for prod
 
 az account set --subscription "$SUB"
+# Register the resource providers this stack needs (one-time per subscription).
+# Skipping these gives: "MissingSubscriptionRegistration ... namespace 'X'".
+az provider register -n Microsoft.ContainerRegistry --wait
 az provider register -n Microsoft.App --wait
 az provider register -n Microsoft.OperationalInsights --wait
 
@@ -60,14 +63,23 @@ az role assignment create --assignee "$APPREG" --role AcrPush \
 az role assignment create --assignee "$APPREG" --role Contributor \
   --scope $(az group show -n "$RG" --query id -o tsv)
 
-# Federated credential per GitHub Environment (repeat for dev and prod)
-az ad app federated-credential create --id "$APPREG" --parameters '{
-  "name": "github-env-dev",
-  "issuer": "https://token.actions.githubusercontent.com",
-  "subject": "repo:<OWNER>/<REPO>:environment:dev",
-  "audiences": ["api://AzureADTokenExchange"]
-}'
-# ...and again with subject ".../environment:prod" and name "github-env-prod"
+# Federated credential per GitHub Environment.
+# IMPORTANT: set REPO to your real owner/repo — the subject must match exactly
+# what GitHub sends, or deploys fail with "AADSTS70021: No matching federated
+# identity record found".
+REPO=Eshwarkiran/KempenCricketClub
+
+for ENV in dev prod; do
+  az ad app federated-credential create --id "$APPREG" --parameters "{
+    \"name\": \"github-env-$ENV\",
+    \"issuer\": \"https://token.actions.githubusercontent.com\",
+    \"subject\": \"repo:$REPO:environment:$ENV\",
+    \"audiences\": [\"api://AzureADTokenExchange\"]
+  }"
+done
+
+# Verify both subjects are correct (no <OWNER>/<REPO> placeholders left):
+az ad app federated-credential list --id "$APPREG" --query "[].{name:name, subject:subject}" -o table
 ```
 
 `AZURE_CLIENT_ID` = `$APPREG`, `AZURE_TENANT_ID` = `az account show --query tenantId -o tsv`,

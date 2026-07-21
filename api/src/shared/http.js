@@ -145,8 +145,15 @@ async function verifyTurnstile(token, remoteIp) {
       body: params.toString()
     });
     const data = await res.json();
+    if (data.success !== true) {
+      // Common codes: invalid-input-secret (wrong/mistyped secret),
+      // invalid-input-response (bad, expired or wrong-hostname token),
+      // timeout-or-duplicate (token already used).
+      console.error("turnstile: verification failed:", JSON.stringify(data["error-codes"] || data));
+    }
     return data.success === true;
-  } catch {
+  } catch (err) {
+    console.error("turnstile: verifier request failed:", err && err.message);
     return false; // fail closed on verifier error
   }
 }

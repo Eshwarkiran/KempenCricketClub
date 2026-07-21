@@ -81,10 +81,30 @@ jobs:
           MS_CLIENT_SECRET: ${{ secrets.MS_CLIENT_SECRET }}
         run: |
           export API_IMAGE WEB_IMAGE
-          VARS='${AZURE_LOCATION} ${MANAGED_ENVIRONMENT_ID} ${ACR_LOGIN_SERVER} ${API_IMAGE} ${WEB_IMAGE} ${SQL_SERVER} ${SQL_DATABASE} ${SQL_USER} ${SQL_PASSWORD} ${SQL_TRUST_CERT} ${BASIC_AUTH_USER} ${BASIC_AUTH_PASSWORD} ${JWT_SECRET} ${JWT_EXPIRES_IN} ${TURNSTILE_SECRET} ${SITE_URL} ${SMTP_HOST} ${SMTP_PORT} ${SMTP_SECURE} ${SMTP_AUTH_TYPE} ${SMTP_USER} ${SMTP_PASSWORD} ${SMTP_FROM} ${MS_TENANT_ID} ${MS_CLIENT_ID} ${MS_CLIENT_SECRET}'
+          export CONTAINERAPP_NAME='${{ vars.CONTAINERAPP_NAME }}'
+
+          # Values land inside double-quoted YAML scalars, so escape backslashes
+          # and double quotes (a password containing " would otherwise produce
+          # invalid YAML). Newlines are not supported in these settings.
+          for v in CONTAINERAPP_NAME AZURE_LOCATION MANAGED_ENVIRONMENT_ID ACR_LOGIN_SERVER \
+                   API_IMAGE WEB_IMAGE SQL_SERVER SQL_DATABASE SQL_USER SQL_PASSWORD \
+                   SQL_TRUST_CERT BASIC_AUTH_USER BASIC_AUTH_PASSWORD JWT_SECRET \
+                   JWT_EXPIRES_IN TURNSTILE_SECRET SITE_URL SMTP_HOST SMTP_PORT \
+                   SMTP_SECURE SMTP_AUTH_TYPE SMTP_USER SMTP_PASSWORD SMTP_FROM \
+                   MS_TENANT_ID MS_CLIENT_ID MS_CLIENT_SECRET; do
+            printf -v "$v" '%s' "$(printf '%s' "${!v}" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')"
+            export "$v"
+          done
+
+          VARS='${CONTAINERAPP_NAME} ${AZURE_LOCATION} ${MANAGED_ENVIRONMENT_ID} ${ACR_LOGIN_SERVER} ${API_IMAGE} ${WEB_IMAGE} ${SQL_SERVER} ${SQL_DATABASE} ${SQL_USER} ${SQL_PASSWORD} ${SQL_TRUST_CERT} ${BASIC_AUTH_USER} ${BASIC_AUTH_PASSWORD} ${JWT_SECRET} ${JWT_EXPIRES_IN} ${TURNSTILE_SECRET} ${SITE_URL} ${SMTP_HOST} ${SMTP_PORT} ${SMTP_SECURE} ${SMTP_AUTH_TYPE} ${SMTP_USER} ${SMTP_PASSWORD} ${SMTP_FROM} ${MS_TENANT_ID} ${MS_CLIENT_ID} ${MS_CLIENT_SECRET}'
           envsubst "$VARS" < deploy/containerapp.yaml > rendered.yaml
-          echo "Rendered spec (secrets omitted):"
-          grep -vE 'password|secret|PASSWORD|SECRET' rendered.yaml || true
+
+          # Fail fast with a clear message if the result isn't valid YAML.
+          python3 -c "import yaml,sys; yaml.safe_load(open('rendered.yaml'))" \
+            || { echo '::error::rendered.yaml is not valid YAML (check for special characters in secrets)'; exit 1; }
+
+          echo "Rendered spec (secret values omitted):"
+          grep -vE 'value: "\*|password|secret|PASSWORD|SECRET' rendered.yaml || true
 
       - name: Deploy Container App (create or update)
         run: |

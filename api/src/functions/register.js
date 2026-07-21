@@ -1,6 +1,6 @@
 "use strict";
 const { app } = require("@azure/functions");
-const { sql, getPool, emailExists } = require("../shared/db");
+const { sql, getPool, memberExists } = require("../shared/db");
 const {
   requireJwt, readJson, str, bool, isEmail, dateOrNull, langOf, normalizeCategory,
   ok, badRequest, conflict
@@ -27,8 +27,9 @@ app.http("register", {
     const email = str(body.email, 255);
 
     try {
-      // Reject duplicates (any existing member with this email).
-      if (await emailExists("members", email)) {
+      // Reject only if already a REGULAR member. A trial member (from /join)
+      // is allowed to register as a regular member with the same email.
+      if (await memberExists(email, "regular")) {
         return conflict("This email is already registered.");
       }
 
