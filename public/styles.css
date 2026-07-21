@@ -189,10 +189,6 @@ h2.big{font-size:clamp(26px,3vw,36px); margin-top:10px}
 .field textarea{min-height:96px; resize:vertical}
 .field input:focus,.field select:focus,.field textarea:focus{outline:none; border-color:var(--yellow); box-shadow:0 0 0 3px rgba(252,194,0,.25)}
 .frow{display:grid; grid-template-columns:1fr 1fr; gap:16px}
-.radios{display:flex; gap:10px; flex-wrap:wrap}
-.radios label{display:inline-flex; align-items:center; gap:8px; background:#fff; border:1.5px solid rgba(17,17,17,.18); border-radius:999px; padding:9px 16px; cursor:pointer; font-family:inherit; font-size:15px; text-transform:none; letter-spacing:0; color:var(--ink); white-space:nowrap}
-/* keep the dot from being squashed when the pill is tight */
-.radios input[type=radio]{flex:none; margin:0}
 .check{display:flex; gap:10px; align-items:flex-start; font-size:14px; color:#444; margin-bottom:16px}
 .check input{margin-top:4px}
 
@@ -253,6 +249,8 @@ h2.big{font-size:clamp(26px,3vw,36px); margin-top:10px}
 .reg legend{width:100%; font-family:"Geist Mono",monospace; font-size:12px; font-weight:500; text-transform:uppercase; letter-spacing:.07em; color:var(--green); padding-bottom:10px; border-bottom:2px solid var(--yellow); margin-bottom:18px}
 .reg .step-n{font-family:"Geist Mono",monospace; color:var(--field); margin-right:8px}
 .pills{display:grid; grid-template-columns:repeat(4,1fr); gap:12px}
+/* join form has three options rather than four */
+.pills--3{grid-template-columns:repeat(3,1fr)}
 .pill input{position:absolute; opacity:0; pointer-events:none}
 .pill label{display:block; border:1.5px solid rgba(17,17,17,.16); border-radius:8px; padding:16px 12px; cursor:pointer; text-align:center; font-family:"Hanken Grotesk",sans-serif; font-weight:600; font-size:15px; color:var(--ink); margin:0; transition:.15s var(--ease); text-transform:none; letter-spacing:0}
 .pill label small{display:block; font-weight:400; color:#777; font-size:12px; margin-top:4px}
@@ -333,10 +331,7 @@ footer a:hover{color:var(--green)}
 @media (max-width:560px){
   .grid3,.stats,.dual,.f-grid,.glossary,.incex,.contact-grid,.frow,.tiers,.team,.news-grid,.found-grid,.pslots{grid-template-columns:1fr}
   /* short labels — keep these 2-up rather than a very tall single column */
-  .slots,.pills{grid-template-columns:1fr 1fr}
-  /* radio pills: stack full-width so long labels can't overflow the pill */
-  .radios{flex-direction:column; align-items:stretch}
-  .radios label{width:100%; border-radius:12px; padding:12px 16px; white-space:normal}
+  .slots,.pills,.pills--3{grid-template-columns:1fr 1fr}
   /* photo + text side by side gets too cramped on a phone */
   .advisor{grid-template-columns:1fr; gap:18px; padding:24px}
   .hero h1{font-size:36px}
