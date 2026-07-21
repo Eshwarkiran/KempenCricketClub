@@ -1,10 +1,14 @@
 # Reverse proxy + static host for the Kempen Cricket Club site.
-# Serves the built Astro site and forwards /api/* to the Functions container,
-# so the browser sees a single origin and the forms' relative /api calls work.
+# Serves the built Astro site and forwards /api/* to the Functions container.
+#
+# This is an nginx TEMPLATE: the base image's entrypoint runs envsubst on it at
+# container start, replacing ${API_UPSTREAM} with the env var value (only defined
+# env vars are substituted, so $host/$uri/etc. are left untouched).
+#   - docker-compose (separate containers):  API_UPSTREAM=api:8080
+#   - Azure Container App (same pod):         API_UPSTREAM=localhost:8080
 
 upstream api_upstream {
-    # "api" is the compose service name; it listens on 80 inside its container.
-    server api:80;
+    server ${API_UPSTREAM};
 }
 
 server {
@@ -32,8 +36,6 @@ server {
     }
 
     # --- Static site (Astro: build format 'directory', trailingSlash 'always') ---
-    # Pages are emitted as /path/index.html, so try the URI, then its directory,
-    # then fall back to the built 404 page.
     location / {
         try_files $uri $uri/ /404/index.html;
     }

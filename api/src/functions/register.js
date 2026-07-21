@@ -1,7 +1,11 @@
 "use strict";
 const { app } = require("@azure/functions");
-const { sql, getPool } = require("../shared/db");
-const { requireJwt, readJson, str, bool, isEmail, dateOrNull, langOf, ok, badRequest } = require("../shared/http");
+const { sql, getPool, emailExists } = require("../shared/db");
+const {
+  requireJwt, readJson, str, bool, isEmail, dateOrNull, langOf, normalizeCategory,
+  ok, badRequest, conflict
+} = require("../shared/http");
+const { sendConfirmation } = require("../shared/mail");
 
 app.http("register", {
   route: "register",
@@ -20,16 +24,23 @@ app.http("register", {
       return badRequest("GDPR consent is required.");
     }
 
+    const email = str(body.email, 255);
+
     try {
+      // Reject duplicates (any existing member with this email).
+      if (await emailExists("members", email)) {
+        return conflict("This email is already registered.");
+      }
+
       const pool = await getPool();
       await pool
         .request()
         .input("member_type", sql.VarChar(10), "regular") // register = regular member
         .input("source", sql.VarChar(10), "register")
-        .input("category", sql.NVarChar(50), str(body.category, 50))
+        .input("category", sql.NVarChar(50), normalizeCategory(body.category))
         .input("first_name", sql.NVarChar(100), str(body.firstName, 100))
         .input("last_name", sql.NVarChar(100), str(body.lastName, 100))
-        .input("email", sql.NVarChar(255), str(body.email, 255))
+        .input("email", sql.NVarChar(255), email)
         .input("phone", sql.NVarChar(50), str(body.phone, 50))
         .input("address", sql.NVarChar(255), str(body.address, 255))
         .input("city", sql.NVarChar(100), str(body.city, 100))
@@ -78,6 +89,30 @@ app.http("register", {
              @student_id, @heard_via,
              @consent_gdpr, @agree_rules, @agree_house, @agree_photo, @agree_guardian, @lang);
         `);
+
+      // Auto-subscribe to the newsletter (idempotent). Best-effort.
+      try {
+        await pool
+          .request()
+          .input("email", sql.NVarChar(255), email.toLowerCase())
+          .input("lang", sql.Char(2), langOf(body))
+          .query(`
+            MERGE dbo.subscriber AS t
+            USING (SELECT @email AS email) AS s
+            ON t.email = s.email
+            WHEN MATCHED THEN UPDATE SET unsubscribed_at = NULL, lang = @lang
+            WHEN NOT MATCHED THEN INSERT (email, lang) VALUES (@email, @lang);
+          `);
+      } catch (subErr) {
+        context.warn("register auto-subscribe failed", subErr);
+      }
+
+      // Confirmation email. Best-effort — never blocks the response.
+      const sent = await sendConfirmation({
+        to: email, name: str(body.firstName, 100), kind: "register", lang: langOf(body)
+      });
+      if (!sent) context.warn("register confirmation email not sent (SMTP off or error)");
+
       return ok;
     } catch (err) {
       context.error("register insert failed", err);

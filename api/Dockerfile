@@ -8,9 +8,14 @@
 FROM --platform=linux/amd64 mcr.microsoft.com/azure-functions/node:4-node20
 
 # The runtime looks for the app here and logs to the container console.
+# Listen on 8080 (not the default 80): in a single Azure Container App the web
+# (nginx) and api containers share one network namespace, so they can't both
+# bind 80. nginx proxies /api to localhost:8080.
 ENV AzureWebJobsScriptRoot=/home/site/wwwroot \
     AzureFunctionsJobHost__Logging__Console__IsEnabled=true \
-    FUNCTIONS_WORKER_RUNTIME=node
+    FUNCTIONS_WORKER_RUNTIME=node \
+    ASPNETCORE_URLS=http://+:8080 \
+    WEBSITES_PORT=8080
 
 WORKDIR /home/site/wwwroot
 
@@ -22,5 +27,4 @@ RUN npm install --omit=dev --no-audit --no-fund
 # so no secrets are baked into the image — supply them at runtime instead.
 COPY . .
 
-# The Azure Functions base image serves HTTP on port 80.
-EXPOSE 80
+EXPOSE 8080

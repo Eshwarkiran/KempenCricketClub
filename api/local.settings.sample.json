@@ -11,6 +11,18 @@
     "BASIC_AUTH_USER": "kccforms",
     "BASIC_AUTH_PASSWORD": "<choose-a-strong-value>",
     "JWT_SECRET": "<long-random-secret-min-32-chars>",
-    "JWT_EXPIRES_IN": "15m"
+    "JWT_EXPIRES_IN": "15m",
+    "TURNSTILE_SECRET": "",
+    "SITE_URL": "http://localhost",
+    "SMTP_HOST": "",
+    "SMTP_PORT": "587",
+    "SMTP_SECURE": "false",
+    "SMTP_AUTH_TYPE": "basic",
+    "SMTP_USER": "",
+    "SMTP_PASSWORD": "",
+    "SMTP_FROM": "Kempen Cricket Club <contact@kempencricket.be>",
+    "MS_TENANT_ID": "",
+    "MS_CLIENT_ID": "",
+    "MS_CLIENT_SECRET": ""
   }
 }

@@ -1,0 +1,18 @@
+# Deploy to the PROD environment on every push to the main branch.
+name: deploy-prod
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:   # allow manual runs
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/_deploy.yml
+    with:
+      environment: prod
+    secrets: inherit
