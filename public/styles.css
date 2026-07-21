@@ -65,7 +65,9 @@ header.site{position:sticky; top:0; z-index:50; background:rgba(255,255,255,.92)
 
 /* hero (home) */
 .hero{background:var(--cream); border-bottom:1px solid rgba(17,17,17,.06); overflow:hidden}
-.hero-inner{display:grid; grid-template-columns:1.15fr .85fr; gap:48px; align-items:center; padding:64px 0 72px}
+/* Set vertical padding only — these elements are also .wrap, and the padding
+   shorthand would reset its horizontal padding to 0 (edge-to-edge on mobile). */
+.hero-inner{display:grid; grid-template-columns:1.15fr .85fr; gap:48px; align-items:center; padding-top:64px; padding-bottom:72px}
 .hero h1{font-size:clamp(40px,5vw,64px); line-height:1.05; margin:16px 0 0}
 .hero .sub{margin-top:18px; font-size:18px; max-width:52ch}
 .hero .cta{display:flex; gap:14px; margin-top:26px; flex-wrap:wrap}
@@ -75,7 +77,7 @@ header.site{position:sticky; top:0; z-index:50; background:rgba(255,255,255,.92)
 
 /* interior page hero */
 .page-hero{background:var(--cream); border-bottom:1px solid rgba(17,17,17,.06)}
-.page-hero .inner{padding:52px 0 48px; max-width:760px}
+.page-hero .inner{padding-top:52px; padding-bottom:48px; max-width:760px}
 .page-hero h1{font-size:clamp(32px,4vw,48px); margin:12px 0 0}
 .page-hero .sub{margin-top:14px; font-size:18px; color:#333}
 .page-hero .cta{display:flex; gap:12px; margin-top:22px; flex-wrap:wrap}
@@ -188,7 +190,9 @@ h2.big{font-size:clamp(26px,3vw,36px); margin-top:10px}
 .field input:focus,.field select:focus,.field textarea:focus{outline:none; border-color:var(--yellow); box-shadow:0 0 0 3px rgba(252,194,0,.25)}
 .frow{display:grid; grid-template-columns:1fr 1fr; gap:16px}
 .radios{display:flex; gap:10px; flex-wrap:wrap}
-.radios label{display:inline-flex; align-items:center; gap:8px; background:#fff; border:1.5px solid rgba(17,17,17,.18); border-radius:999px; padding:9px 16px; cursor:pointer; font-family:inherit; font-size:15px; text-transform:none; letter-spacing:0; color:var(--ink)}
+.radios label{display:inline-flex; align-items:center; gap:8px; background:#fff; border:1.5px solid rgba(17,17,17,.18); border-radius:999px; padding:9px 16px; cursor:pointer; font-family:inherit; font-size:15px; text-transform:none; letter-spacing:0; color:var(--ink); white-space:nowrap}
+/* keep the dot from being squashed when the pill is tight */
+.radios input[type=radio]{flex:none; margin:0}
 .check{display:flex; gap:10px; align-items:flex-start; font-size:14px; color:#444; margin-bottom:16px}
 .check input{margin-top:4px}
 
@@ -294,9 +298,14 @@ footer a:hover{color:var(--green)}
 .slot{height:64px; border:1px dashed rgba(17,17,17,.2); border-radius:8px; display:flex; align-items:center; justify-content:center; font-family:"Geist Mono",monospace; font-size:11px; color:#999; letter-spacing:.05em; background:#fff}
 .legal{border-top:1px solid rgba(17,17,17,.1); margin-top:34px; padding-top:22px; font-size:13px; color:#888; display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap}
 
-/* reveal */
-.reveal{opacity:0; transform:translateY(16px); transition:opacity .5s var(--ease),transform .5s var(--ease)}
-.reveal.in{opacity:1; transform:none}
+/* reveal — hidden only once JS has confirmed it can reveal them again.
+   Layout.astro sets .js on <html>; without it (JS disabled or a script error)
+   content stays visible rather than leaving a blank page. */
+.js .reveal{opacity:0; transform:translateY(16px); transition:opacity .5s var(--ease),transform .5s var(--ease)}
+.js .reveal.in{opacity:1; transform:none}
+@media (prefers-reduced-motion: reduce){
+  .js .reveal{opacity:1; transform:none; transition:none}
+}
 
 @media (max-width:900px){
   .nav .btn.deskcta{display:none}
@@ -314,16 +323,22 @@ footer a:hover{color:var(--green)}
   .menu a:last-child{border-bottom:0}
   .menu a.active::after{display:none}
   .menu a.active{color:var(--green); font-weight:600}
-  .hero-inner{grid-template-columns:1fr; padding:44px 0 52px}
+  .hero-inner{grid-template-columns:1fr; padding-top:44px; padding-bottom:52px}
   .hero-badge{order:-1} .hero-badge svg{width:190px} .hero-badge img{width:190px}
-  .grid3,.stats,.dual,.f-grid,.slots,.glossary,.incex,.tiers,.contact-grid,.frow,.found-grid{grid-template-columns:1fr 1fr}
+  .grid3,.stats,.dual,.f-grid,.slots,.glossary,.incex,.tiers,.contact-grid,.frow,.found-grid,.team,.news-grid,.pslots,.pills{grid-template-columns:1fr 1fr}
   .two{grid-template-columns:1fr; gap:24px}
   .section{padding:52px 0}
-  .page-hero .inner{padding:40px 0 36px}
+  .page-hero .inner{padding-top:40px; padding-bottom:36px}
 }
 @media (max-width:560px){
-  .grid3,.stats,.dual,.f-grid,.glossary,.incex,.contact-grid,.frow,.tiers{grid-template-columns:1fr}
-  .slots{grid-template-columns:1fr 1fr}
+  .grid3,.stats,.dual,.f-grid,.glossary,.incex,.contact-grid,.frow,.tiers,.team,.news-grid,.found-grid,.pslots{grid-template-columns:1fr}
+  /* short labels — keep these 2-up rather than a very tall single column */
+  .slots,.pills{grid-template-columns:1fr 1fr}
+  /* radio pills: stack full-width so long labels can't overflow the pill */
+  .radios{flex-direction:column; align-items:stretch}
+  .radios label{width:100%; border-radius:12px; padding:12px 16px; white-space:normal}
+  /* photo + text side by side gets too cramped on a phone */
+  .advisor{grid-template-columns:1fr; gap:18px; padding:24px}
   .hero h1{font-size:36px}
 }
 
