@@ -54,6 +54,7 @@
 
   // ---- Cloudflare Turnstile (explicit render, execute on submit) ----
   var _tsReady = false;
+  var _tsBlocked = false;     // script failed to load (ad blocker / Brave Shields)
   var _tsQueue = [];
   var _tsWidgets = new Map(); // form -> { id, resolve }
 
@@ -61,16 +62,17 @@
     return TURNSTILE_SITE_KEY && TURNSTILE_SITE_KEY.indexOf("CHANGE_ME") !== 0;
   }
 
+  function flushQueue() { _tsQueue.forEach(function (fn) { fn(); }); _tsQueue = []; }
+
   function loadTurnstile() {
     if (!turnstileEnabled()) return;
-    window.__kccTsOnload = function () {
-      _tsReady = true;
-      _tsQueue.forEach(function (fn) { fn(); });
-      _tsQueue = [];
-    };
+    window.__kccTsOnload = function () { _tsReady = true; flushQueue(); };
     var s = document.createElement("script");
     s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=__kccTsOnload";
     s.async = true; s.defer = true;
+    // A content blocker prevents onload from ever firing — mark it blocked so
+    // submissions fail with a helpful message instead of an empty token.
+    s.onerror = function () { _tsBlocked = true; flushQueue(); };
     document.head.appendChild(s);
   }
 
@@ -96,19 +98,29 @@
     _tsWidgets.set(form, { id: id, resolve: null });
   }
 
-  /* Resolve a Turnstile token for a form. Resolves to "" when disabled. */
+  /* Resolve a Turnstile token for a form. Resolves to "" when captcha is
+     disabled; REJECTS with {kind:"captcha_blocked"} when the widget can't run
+     (script blocked by an ad blocker / Brave Shields, or it times out). */
   function getTurnstileToken(form) {
     if (!turnstileEnabled()) return Promise.resolve("");
-    return new Promise(function (resolve) {
+    return new Promise(function (resolve, reject) {
+      var settled = false;
+      function ok(token) { if (!settled) { settled = true; resolve(token); } }
+      function blocked() { if (!settled) { settled = true; reject({ kind: "captcha_blocked" }); } }
       function go() {
+        if (settled) return;
+        if (_tsBlocked || !window.turnstile) { blocked(); return; }
         try {
           ensureWidget(form);
           var w = _tsWidgets.get(form);
-          w.resolve = resolve;
+          w.resolve = function (token) { token ? ok(token) : blocked(); };
           window.turnstile.execute(w.id);
-        } catch (e) { resolve(""); }
+        } catch (e) { blocked(); }
       }
+      // A blocked script never fires onload; give it a few seconds then give up.
+      setTimeout(function () { if (!settled && !_tsReady) blocked(); }, 6000);
       if (_tsReady && window.turnstile) go();
+      else if (_tsBlocked) blocked();
       else _tsQueue.push(go);
     });
   }
@@ -128,13 +140,15 @@
       sending: "Sending…",
       fail: "Sorry, something went wrong. Please email us at contact@kempencricket.be.",
       exists: "This email is already registered with us.",
-      captcha: "We couldn't verify you're human. Please try again."
+      captcha: "We couldn't verify you're human. Please try again.",
+      blocked: "Your browser or an extension is blocking our spam protection. Please turn off your ad blocker (or Brave Shields) for this site and try again."
     },
     nl: {
       sending: "Versturen…",
       fail: "Sorry, er ging iets mis. Mail ons op contact@kempencricket.be.",
       exists: "Dit e-mailadres is al bij ons geregistreerd.",
-      captcha: "We konden niet verifiëren dat je een mens bent. Probeer opnieuw."
+      captcha: "We konden niet verifiëren dat je een mens bent. Probeer opnieuw.",
+      blocked: "Je browser of een extensie blokkeert onze spambeveiliging. Schakel je adblocker (of Brave Shields) voor deze site uit en probeer opnieuw."
     }
   }[lang];
 
@@ -175,7 +189,11 @@
           if (btn) { btn.disabled = false; btn.textContent = orig; }
           resetTurnstile(form);
           var kind = err && err.kind;
-          alert(kind === "exists" ? T.exists : kind === "captcha" ? T.captcha : T.fail);
+          alert(
+            kind === "exists" ? T.exists :
+            kind === "captcha_blocked" ? T.blocked :
+            kind === "captcha" ? T.captcha : T.fail
+          );
         });
     });
   });
