@@ -1,13 +1,9 @@
 "use strict";
 const { app } = require("@azure/functions");
 const { findAccountByEmail, activateMember, getMemberBrief } = require("../shared/db");
-const { str, isEmail, verifyMemberApproveToken } = require("../shared/http");
+const { str, isEmail, verifyMemberApproveToken, brandedPage } = require("../shared/http");
 
-function page(title, message) {
-  return "<!doctype html><meta charset=utf-8><title>" + title + "</title>" +
-    "<body style=\"font-family:system-ui,sans-serif;max-width:520px;margin:80px auto;padding:0 20px\">" +
-    "<h1>" + title + "</h1><p>" + message + "</p><p><a href=\"/\">Back to the website</a></p></body>";
-}
+const page = (title, message) => brandedPage({ title, message, eyebrow: "Membership" });
 
 /**
  * GET/POST /api/verify-member?mid=<id>&email=<account email>&t=<token>

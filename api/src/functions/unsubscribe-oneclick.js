@@ -1,7 +1,7 @@
 "use strict";
 const { app } = require("@azure/functions");
 const { sql, getPool } = require("../shared/db");
-const { str, isEmail, verifyUnsubToken } = require("../shared/http");
+const { str, isEmail, verifyUnsubToken, brandedPage } = require("../shared/http");
 
 /**
  * One-click unsubscribe (RFC 8058) — deliberately NOT behind the Bearer JWT,
@@ -45,12 +45,11 @@ app.http("unsubscribeOneClick", {
       return {
         status: 200,
         headers: { "Content-Type": "text/html; charset=utf-8" },
-        body:
-          "<!doctype html><meta charset=utf-8><title>Unsubscribed</title>" +
-          "<body style=\"font-family:system-ui,sans-serif;max-width:520px;margin:80px auto;padding:0 20px\">" +
-          "<h1>You've been unsubscribed</h1>" +
-          "<p>You won't receive any more newsletters from Kempen Cricket Club.</p>" +
-          "<p><a href=\"/\">Back to the website</a></p></body>"
+        body: brandedPage({
+          eyebrow: "Newsletter",
+          title: "You've been unsubscribed",
+          message: "You won't receive any more newsletters from Kempen Cricket Club."
+        })
       };
     }
     return { status: 200, jsonBody: { success: true } };

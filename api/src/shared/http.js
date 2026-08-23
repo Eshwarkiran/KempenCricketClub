@@ -213,6 +213,31 @@ function verifyMemberApproveToken(email, memberId, token) {
   return safeEqual(parts[1], expected);
 }
 
+/**
+ * A small, on-brand HTML page for endpoints that render directly (verify-member,
+ * one-click unsubscribe). Loads the site stylesheet + fonts and uses the
+ * interior page-hero markup so it matches the rest of the site.
+ */
+function brandedPage({ title, message, eyebrow = "Kempen Cricket Club", lang = "en" }) {
+  const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+  const back = lang === "nl" ? "Terug naar de website" : "Back to the website";
+  const home = lang === "nl" ? "/nl/" : "/";
+  return (
+    "<!doctype html><html lang=\"" + lang + "\"><head><meta charset=\"utf-8\">" +
+    "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">" +
+    "<title>" + esc(title) + " | Kempen Cricket Club</title>" +
+    "<link href=\"https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Hanken+Grotesk:wght@400;600&family=Geist+Mono:wght@500&display=swap\" rel=\"stylesheet\">" +
+    "<link rel=\"stylesheet\" href=\"/styles.css\">" +
+    "</head><body>" +
+    "<section class=\"page-hero\"><div class=\"wrap inner\">" +
+    "<span class=\"eyebrow\" style=\"display:block\">" + esc(eyebrow) + "</span>" +
+    "<h1>" + esc(title) + "</h1>" +
+    "<p class=\"sub\">" + esc(message) + "</p>" +
+    "<div class=\"cta\" style=\"margin-top:22px\"><a class=\"btn btn--primary\" href=\"" + home + "\">" + back + "</a></div>" +
+    "</div></section></body></html>"
+  );
+}
+
 /** 409 — used when an email already exists. Carries a machine-readable code. */
 function conflict(message) {
   return { status: 409, jsonBody: { success: false, error: message, code: "email_exists" } };
@@ -227,6 +252,6 @@ module.exports = {
   requireJwt, signToken, checkClientCredentials, readJson,
   str, bool, isEmail, dateOrNull, langOf, normalizeCategory,
   verifyTurnstile, signUnsubToken, verifyUnsubToken,
-  signMemberApproveToken, verifyMemberApproveToken,
+  signMemberApproveToken, verifyMemberApproveToken, brandedPage,
   ok, badRequest, conflict, captchaFailed
 };
