@@ -1,0 +1,35 @@
+meta {
+  name: Verify Member (approve)
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/verify-member?mid={{memberId}}&email={{memberEmail}}&t={{approveToken}}
+  body: none
+  auth: none
+}
+
+params:query {
+  mid: {{memberId}}
+  email: {{memberEmail}}
+  t: {{approveToken}}
+}
+
+tests {
+  test("200 OK (approved)", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}
+
+docs {
+  Approves (activates) a pending member — the endpoint the emailed approval link
+  points at. Not behind the Bearer JWT; authenticity comes from the signed token
+  bound to the account email + member id. Returns an HTML confirmation page.
+
+  To try it, register/join a NEW person on an EXISTING account (creates a pending
+  row and emails the link), then either click the emailed link, or set the env
+  vars `memberId` / `memberEmail` / `approveToken`. Generate a token with:
+      node -e 'const h=require("./api/src/shared/http.js");console.log(h.signMemberApproveToken("you@example.com", 42))'
+  (JWT_SECRET set; 42 = the pending member's id).
+}

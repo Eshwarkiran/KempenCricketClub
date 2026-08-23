@@ -71,6 +71,8 @@ jobs:
           SMTP_AUTH_TYPE: ${{ vars.SMTP_AUTH_TYPE }}
           SMTP_USER: ${{ vars.SMTP_USER }}
           SMTP_FROM: ${{ vars.SMTP_FROM }}
+          ADMIN_EMAIL: ${{ vars.ADMIN_EMAIL }}
+          MEMBER_LINK_TTL_MIN: ${{ vars.MEMBER_LINK_TTL_MIN }}
           MS_TENANT_ID: ${{ vars.MS_TENANT_ID }}
           MS_CLIENT_ID: ${{ vars.MS_CLIENT_ID }}
           SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
@@ -91,12 +93,13 @@ jobs:
                    SQL_TRUST_CERT BASIC_AUTH_USER BASIC_AUTH_PASSWORD JWT_SECRET \
                    JWT_EXPIRES_IN TURNSTILE_SECRET SITE_URL SMTP_HOST SMTP_PORT \
                    SMTP_SECURE SMTP_AUTH_TYPE SMTP_USER SMTP_PASSWORD SMTP_FROM \
+                   ADMIN_EMAIL MEMBER_LINK_TTL_MIN \
                    MS_TENANT_ID MS_CLIENT_ID MS_CLIENT_SECRET; do
             printf -v "$v" '%s' "$(printf '%s' "${!v}" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')"
             export "$v"
           done
 
-          VARS='${CONTAINERAPP_NAME} ${AZURE_LOCATION} ${MANAGED_ENVIRONMENT_ID} ${ACR_LOGIN_SERVER} ${API_IMAGE} ${WEB_IMAGE} ${SQL_SERVER} ${SQL_DATABASE} ${SQL_USER} ${SQL_PASSWORD} ${SQL_TRUST_CERT} ${BASIC_AUTH_USER} ${BASIC_AUTH_PASSWORD} ${JWT_SECRET} ${JWT_EXPIRES_IN} ${TURNSTILE_SECRET} ${SITE_URL} ${SMTP_HOST} ${SMTP_PORT} ${SMTP_SECURE} ${SMTP_AUTH_TYPE} ${SMTP_USER} ${SMTP_PASSWORD} ${SMTP_FROM} ${MS_TENANT_ID} ${MS_CLIENT_ID} ${MS_CLIENT_SECRET}'
+          VARS='${CONTAINERAPP_NAME} ${AZURE_LOCATION} ${MANAGED_ENVIRONMENT_ID} ${ACR_LOGIN_SERVER} ${API_IMAGE} ${WEB_IMAGE} ${SQL_SERVER} ${SQL_DATABASE} ${SQL_USER} ${SQL_PASSWORD} ${SQL_TRUST_CERT} ${BASIC_AUTH_USER} ${BASIC_AUTH_PASSWORD} ${JWT_SECRET} ${JWT_EXPIRES_IN} ${TURNSTILE_SECRET} ${SITE_URL} ${SMTP_HOST} ${SMTP_PORT} ${SMTP_SECURE} ${SMTP_AUTH_TYPE} ${SMTP_USER} ${SMTP_PASSWORD} ${SMTP_FROM} ${ADMIN_EMAIL} ${MEMBER_LINK_TTL_MIN} ${MS_TENANT_ID} ${MS_CLIENT_ID} ${MS_CLIENT_SECRET}'
           envsubst "$VARS" < deploy/containerapp.yaml > rendered.yaml
 
           # Fail fast with a clear message if the result isn't valid YAML.

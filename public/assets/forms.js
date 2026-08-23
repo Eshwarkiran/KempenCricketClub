@@ -139,7 +139,9 @@
   }[lang];
 
   // Endpoints protected by Turnstile.
-  var CAPTCHA_ENDPOINTS = { "/api/join": true, "/api/subscribe": true, "/api/contact": true };
+  var CAPTCHA_ENDPOINTS = {
+    "/api/join": true, "/api/register": true, "/api/subscribe": true, "/api/contact": true
+  };
 
   loadTurnstile();
 

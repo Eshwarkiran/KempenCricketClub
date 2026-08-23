@@ -102,6 +102,10 @@ properties:
             secretRef: smtp-password
           - name: SMTP_FROM
             value: "${SMTP_FROM}"
+          - name: ADMIN_EMAIL
+            value: "${ADMIN_EMAIL}"
+          - name: MEMBER_LINK_TTL_MIN
+            value: "${MEMBER_LINK_TTL_MIN}"
           - name: MS_TENANT_ID
             value: "${MS_TENANT_ID}"
           - name: MS_CLIENT_ID

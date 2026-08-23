@@ -185,4 +185,85 @@ async function sendConfirmation({ to, name, kind, lang }) {
   }
 }
 
-module.exports = { sendConfirmation };
+/**
+ * Notify the club of a new signup. Sends to ADMIN_EMAIL (default membership@).
+ * `kind` is join | register | added. `details` is a flat object of field -> value.
+ * Best-effort — returns true/false, never throws.
+ */
+async function sendAdminNotification({ kind, details }) {
+  let t;
+  try {
+    t = await getTransport();
+  } catch (err) {
+    console.error("mail: admin transport creation failed:", err && err.message);
+    return false;
+  }
+  if (!t) return false;
+
+  const to = process.env.ADMIN_EMAIL || "membership@kempencricket.be";
+  const labels = { join: "trial signup (join)", register: "member registration", added: "added family member", approved: "member approval" };
+  const heading = labels[kind] || kind;
+
+  const lines = Object.entries(details || {})
+    .filter(([, v]) => v !== null && v !== undefined && String(v).trim() !== "")
+    .map(([k, v]) => `${k}: ${v}`)
+    .join("\n");
+
+  try {
+    await t.sendMail({
+      from: process.env.SMTP_FROM || "Kempen Cricket Club <contact@kempencricket.be>",
+      to,
+      subject: `New ${heading} — ${details.name || details.email || "KCC"}`,
+      text: `A new ${heading} was submitted on the website.\n\n${lines}\n`
+    });
+    return true;
+  } catch (err) {
+    console.error("mail: admin sendMail failed:", err && err.code, err && err.message);
+    return false;
+  }
+}
+
+// Localised copy for the member-approval link (adding someone to an account).
+const APPROVE_COPY = {
+  en: {
+    subject: "Approve a new member on your account — Kempen Cricket Club",
+    body: (name, url) =>
+      "Hi,\n\n" + (name ? name + " was" : "Someone was") +
+      " added to your Kempen Cricket Club account. To confirm and activate this " +
+      "membership, open the link below (it expires in 24 hours):\n\n" +
+      url + "\n\nIf you didn't expect this, you can ignore this email — the member " +
+      "stays inactive until approved.\n\nKempen Cricket Club"
+  },
+  nl: {
+    subject: "Nieuw lid goedkeuren op je account — Kempen Cricket Club",
+    body: (name, url) =>
+      "Hallo,\n\n" + (name ? name + " werd" : "Er werd iemand") +
+      " toegevoegd aan je Kempen Cricket Club-account. Om dit lidmaatschap te " +
+      "bevestigen en te activeren, open onderstaande link (verloopt na 24 uur):\n\n" +
+      url + "\n\nVerwachtte je dit niet, negeer deze e-mail dan — het lid blijft " +
+      "inactief tot het is goedgekeurd.\n\nKempen Cricket Club"
+  }
+};
+
+/** Email the member-approval link to the account owner. Best-effort. */
+async function sendApprovalLink({ to, name, url, lang }) {
+  let t;
+  try { t = await getTransport(); } catch (err) {
+    console.error("mail: approval-link transport failed:", err && err.message);
+    return false;
+  }
+  if (!t) return false;
+  const copy = APPROVE_COPY[lang] || APPROVE_COPY.en;
+  try {
+    await t.sendMail({
+      from: process.env.SMTP_FROM || "Kempen Cricket Club <contact@kempencricket.be>",
+      to, subject: copy.subject, text: copy.body(name, url)
+    });
+    return true;
+  } catch (err) {
+    console.error("mail: approval-link sendMail failed:", err && err.code, err && err.message);
+    return false;
+  }
+}
+
+module.exports = { sendConfirmation, sendAdminNotification, sendApprovalLink };
