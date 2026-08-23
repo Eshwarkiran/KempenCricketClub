@@ -5,22 +5,48 @@ Static Web Apps from this `api/` folder (Node.js v4 programming model).
 
 | Endpoint         | Form            | Table            | Notes                          |
 |------------------|-----------------|------------------|--------------------------------|
-| `POST /api/join`       | /join (3 free sessions) | `dbo.members`  | `member_type='trial'`; captcha; auto-subscribes + confirmation email |
-| `POST /api/register`   | /register       | `dbo.members`    | `member_type='regular'`; auto-subscribes + confirmation email |
-| `POST /api/contact`    | /contact        | `dbo.contact`    | honeypot + captcha             |
-| `POST /api/subscribe`  | footer signup   | `dbo.subscriber` | captcha; re-subscribe allowed after unsubscribe |
-| `POST /api/unsubscribe`| /unsubscribe    | `dbo.subscriber` | sets `unsubscribed_at`; always 200 |
-| `POST /api/token`      | (auth)          | —                | issues a short-lived JWT       |
+| `POST /api/join`         | /join (3 free sessions) | `account`+`members` | `member_type='trial'`; captcha; auto-subscribes + confirmation + admin email |
+| `POST /api/register`     | /register       | `account`+`members` | `member_type='regular'`; trial→regular upgrade; auto-subscribes + confirmation + admin email |
+| `GET/POST /api/verify-member` | (email link) | `members` | approves a pending member (signed token); returns an HTML page |
+| `POST /api/contact`      | /contact        | `dbo.contact`    | honeypot + captcha             |
+| `POST /api/subscribe`    | footer signup   | `dbo.subscriber` | captcha; re-subscribe allowed after unsubscribe |
+| `POST /api/unsubscribe`  | /unsubscribe    | `dbo.subscriber` | sets `unsubscribed_at`; always 200 |
+| `POST /api/token`        | (auth)          | —                | issues a short-lived JWT       |
+
+### Account + member model
+
+Members live in two tables (migration scripts are kept out of the repo — ask a
+maintainer for the `account_member` SQL):
+`account` (one row per email — shared phone/address + household consents) and
+`members` (one row per person, `account_id` FK, `is_primary` marks the account
+holder). Members also carry a `status` (`active` / `pending`). This lets a
+household register several people under the same email and phone.
+
+Adding people is done **only** through the join/register forms:
+
+- **New email** → account + member created **active** (trial for join, regular
+  for register) + confirmation email.
+- **Same person** (existing email, matching name/dob — a trial has no dob yet) →
+  the existing membership is **upgraded in place** (e.g. trial → regular). No
+  approval needed; the account owner controls the email.
+- **New person on an existing account** → inserted as **`status='pending'`** and
+  an **approval link** is emailed to the account owner. `GET /api/verify-member`
+  (opened from that link) activates the member, setting `member_type` from the
+  form it came from (`register` → regular, else trial).
 
 ### Behaviour added on top of the basic inserts
 
-- **Duplicate email → 409.** Join and Contact reject an email that already
-  exists in their table; Subscribe rejects an email that is *currently* subscribed
-  (a previously-unsubscribed address may re-subscribe). Register rejects only an
-  email that is already a **regular** member — a trial member (from /join) may
-  register as a regular member with the same email. The response is
-  `409 { code: "email_exists" }`; the frontend shows a popup instead of the
-  thank-you page.
+- **Duplicate / pending.** Within an account a person is unique on
+  `(first_name, last_name, dob)`. Register rejects an existing **active regular**
+  member (`409 { code: "email_exists" }`); join rejects an existing same-name
+  person. Contact/subscribe keep their own email rules.
+- **Admin notifications.** Join and register email `ADMIN_EMAIL` (default
+  `membership@kempencricket.be`) with the signup's details and whether it is
+  active or pending approval. Best-effort.
+- **Approval link.** Built from `SITE_URL`, signed (HMAC over email+member id via
+  `JWT_SECRET`), expiring after `MEMBER_LINK_TTL_MIN` (default 24h). `verify-member`
+  is not behind the Bearer JWT — the signed token authenticates it — and is
+  idempotent (a second click still reports success).
 - **Category normalisation.** Free-text categories ("Adult (17+)", "Jeugd (≤16)",
   "Thomas More student", …) are stored as `adult` / `junior` / `supporter` /
   `student`.
