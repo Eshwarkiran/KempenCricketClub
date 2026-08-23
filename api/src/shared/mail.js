@@ -201,7 +201,7 @@ async function sendAdminNotification({ kind, details }) {
   if (!t) return false;
 
   const to = process.env.ADMIN_EMAIL || "membership@kempencricket.be";
-  const labels = { join: "trial signup (join)", register: "member registration", added: "added family member" };
+  const labels = { join: "trial signup (join)", register: "member registration", added: "added family member", approved: "member approval" };
   const heading = labels[kind] || kind;
 
   const lines = Object.entries(details || {})

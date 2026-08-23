@@ -242,7 +242,8 @@ async function activateMember(memberId, accountId) {
       UPDATE dbo.members
       SET status = 'active',
           member_type = CASE WHEN source = 'register' THEN 'regular' ELSE 'trial' END
-      OUTPUT inserted.id, inserted.account_id, inserted.first_name, inserted.last_name
+      OUTPUT inserted.id, inserted.account_id, inserted.first_name, inserted.last_name,
+             inserted.member_type, inserted.category
       WHERE id = @id AND account_id = @account_id AND status = 'pending';
     `);
   return r.recordset[0] || null;
