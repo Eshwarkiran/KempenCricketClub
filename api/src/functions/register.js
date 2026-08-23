@@ -6,9 +6,17 @@ const {
 } = require("../shared/db");
 const {
   requireJwt, readJson, str, bool, isEmail, dateOrNull, langOf, normalizeCategory,
-  ok, badRequest, conflict
+  verifyTurnstile, signMemberApproveToken, ok, badRequest, conflict, captchaFailed
 } = require("../shared/http");
-const { sendConfirmation, sendAdminNotification } = require("../shared/mail");
+const { sendConfirmation, sendAdminNotification, sendApprovalLink } = require("../shared/mail");
+
+function approveUrl(email, memberId) {
+  const site = (process.env.SITE_URL || "").replace(/\/+$/, "");
+  const token = signMemberApproveToken(email, memberId);
+  if (!site || !token) return null;
+  return `${site}/api/verify-member?mid=${memberId}` +
+    `&email=${encodeURIComponent(email)}&t=${encodeURIComponent(token)}`;
+}
 
 app.http("register", {
   route: "register",
@@ -19,6 +27,10 @@ app.http("register", {
     if (denied) return denied;
 
     const body = await readJson(request);
+    if (str(body.botcheck)) return ok; // honeypot
+
+    const ip = request.headers.get("x-forwarded-for");
+    if (!(await verifyTurnstile(body.turnstileToken, ip))) return captchaFailed();
 
     if (!str(body.firstName) || !str(body.lastName) || !isEmail(body.email)) {
       return badRequest("firstName, lastName and a valid email are required.");
@@ -33,7 +45,6 @@ app.http("register", {
     const dob = dateOrNull(body.dob);
     const lang = langOf(body);
 
-    // Person fields shared by the insert and the trial->regular upgrade.
     const fields = {
       category: normalizeCategory(body.category),
       firstName, lastName, dob,
@@ -67,36 +78,46 @@ app.http("register", {
         }
       });
 
-      // Matches an existing regular row, or a trial row that has no dob yet
-      // (join doesn't collect dob), so the upgrade lands on the same person.
+      // Matches an existing regular row, or a trial/pending row with no dob yet.
       const existing = await findMemberByName(accountId, firstName, lastName, dob);
-      if (existing && existing.member_type === "regular") {
+      if (existing && existing.member_type === "regular" && existing.status === "active") {
         return conflict("This email is already registered.");
       }
 
-      if (existing && (existing.member_type === "trial" || existing.member_type === "supporter")) {
-        // Trial (or supporter) member registering as a regular member — upgrade in place.
+      let pending = false;
+      if (existing) {
+        // Same person — upgrade in place to regular + active. No approval needed
+        // (they already exist and the owner controls the email).
         await upgradeMemberToRegular(existing.id, fields);
+      } else if (!(await accountHasMembers(accountId))) {
+        // Account holder registering fresh — active immediately.
+        await insertMember({ accountId, isPrimary: true, memberType: "regular", source: "register", status: "active", ...fields });
       } else {
-        const isPrimary = !(await accountHasMembers(accountId));
-        await insertMember({ accountId, isPrimary, memberType: "regular", source: "register", ...fields });
+        // New person on an existing account — pending until the owner approves.
+        pending = true;
+        const memberId = await insertMember({ accountId, isPrimary: false, memberType: "regular", source: "register", status: "pending", ...fields });
+        const url = approveUrl(email, memberId);
+        if (url) {
+          const sent = await sendApprovalLink({ to: email, name: `${firstName} ${lastName}`, url, lang });
+          if (!sent) context.warn("register approval email not sent");
+        } else {
+          context.warn("register approval link not built (SITE_URL/JWT_SECRET missing)");
+        }
       }
 
-      // Auto-subscribe (best-effort).
-      try { await subscribeEmail(email, lang); }
-      catch (subErr) { context.warn("register auto-subscribe failed", subErr); }
+      if (!pending) {
+        try { await subscribeEmail(email, lang); }
+        catch (subErr) { context.warn("register auto-subscribe failed", subErr); }
+        const sent = await sendConfirmation({ to: email, name: firstName, kind: "register", lang });
+        if (!sent) context.warn("register confirmation email not sent");
+      }
 
-      // Confirmation to the applicant (best-effort).
-      const sent = await sendConfirmation({ to: email, name: firstName, kind: "register", lang });
-      if (!sent) context.warn("register confirmation email not sent (SMTP off or error)");
-
-      // Notify the club (best-effort).
       await sendAdminNotification({
         kind: "register",
         details: {
           name: `${firstName} ${lastName}`, email, phone: str(body.phone, 50),
           category: fields.category, dob, city: str(body.city, 100),
-          upgraded_from_trial: existing ? "yes" : "no"
+          status: pending ? "pending approval" : (existing ? "active (upgraded)" : "active")
         }
       });
 

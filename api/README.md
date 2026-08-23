@@ -7,8 +7,7 @@ Static Web Apps from this `api/` folder (Node.js v4 programming model).
 |------------------|-----------------|------------------|--------------------------------|
 | `POST /api/join`         | /join (3 free sessions) | `account`+`members` | `member_type='trial'`; captcha; auto-subscribes + confirmation + admin email |
 | `POST /api/register`     | /register       | `account`+`members` | `member_type='regular'`; trial→regular upgrade; auto-subscribes + confirmation + admin email |
-| `POST /api/add-member/request-link` | /add-member | `account` | emails a magic link to add a family member; captcha; always 200 |
-| `POST /api/add-member`   | /add-member (link) | `members`     | adds a member to an account; magic-link token + captcha; admin email |
+| `GET/POST /api/verify-member` | (email link) | `members` | approves a pending member (signed token); returns an HTML page |
 | `POST /api/contact`      | /contact        | `dbo.contact`    | honeypot + captcha             |
 | `POST /api/subscribe`    | footer signup   | `dbo.subscriber` | captcha; re-subscribe allowed after unsubscribe |
 | `POST /api/unsubscribe`  | /unsubscribe    | `dbo.subscriber` | sets `unsubscribed_at`; always 200 |
@@ -19,26 +18,34 @@ Static Web Apps from this `api/` folder (Node.js v4 programming model).
 Members live in two tables (see `sql/migrations/2026-07_account_member/`):
 `account` (one row per email — shared phone/address + household consents) and
 `members` (one row per person, `account_id` FK, `is_primary` marks the account
-holder). This lets a household register several people under the same email and
-phone. **Join/register** find-or-create the account by email, then insert (or,
-for trial→regular, upgrade) the person. **Add-member** attaches an extra person
-to an existing account after the requester proves control of the account email
-via a signed magic link.
+holder). Members also carry a `status` (`active` / `pending`). This lets a
+household register several people under the same email and phone.
+
+Adding people is done **only** through the join/register forms:
+
+- **New email** → account + member created **active** (trial for join, regular
+  for register) + confirmation email.
+- **Same person** (existing email, matching name/dob — a trial has no dob yet) →
+  the existing membership is **upgraded in place** (e.g. trial → regular). No
+  approval needed; the account owner controls the email.
+- **New person on an existing account** → inserted as **`status='pending'`** and
+  an **approval link** is emailed to the account owner. `GET /api/verify-member`
+  (opened from that link) activates the member, setting `member_type` from the
+  form it came from (`register` → regular, else trial).
 
 ### Behaviour added on top of the basic inserts
 
-- **Duplicate person → 409.** Within an account, a person is unique on
-  `(first_name, last_name, dob)`. Register rejects only an email that is already a
-  **regular** member (a trial member may register as regular — upgraded in place);
-  add-member rejects a person already on the account. Contact/subscribe keep their
-  own email rules. The response is `409 { code: "email_exists" }`.
-- **Admin notifications.** Join, register and add-member email
-  `ADMIN_EMAIL` (default `membership@kempencricket.be`) with the new signup's
-  details. Best-effort.
-- **Add-member magic link.** `/api/add-member/request-link` emails a signed,
-  time-limited link (`MEMBER_LINK_TTL_MIN`, default 24h) built from `SITE_URL`.
-  `/api/add-member` verifies that token before inserting. Both are best-effort on
-  email and never reveal whether an account exists.
+- **Duplicate / pending.** Within an account a person is unique on
+  `(first_name, last_name, dob)`. Register rejects an existing **active regular**
+  member (`409 { code: "email_exists" }`); join rejects an existing same-name
+  person. Contact/subscribe keep their own email rules.
+- **Admin notifications.** Join and register email `ADMIN_EMAIL` (default
+  `membership@kempencricket.be`) with the signup's details and whether it is
+  active or pending approval. Best-effort.
+- **Approval link.** Built from `SITE_URL`, signed (HMAC over email+member id via
+  `JWT_SECRET`), expiring after `MEMBER_LINK_TTL_MIN` (default 24h). `verify-member`
+  is not behind the Bearer JWT — the signed token authenticates it — and is
+  idempotent (a second click still reports success).
 - **Category normalisation.** Free-text categories ("Adult (17+)", "Jeugd (≤16)",
   "Thomas More student", …) are stored as `adult` / `junior` / `supporter` /
   `student`.

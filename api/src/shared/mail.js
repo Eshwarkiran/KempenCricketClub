@@ -223,43 +223,47 @@ async function sendAdminNotification({ kind, details }) {
   }
 }
 
-// Localised copy for the add-member magic link.
-const LINK_COPY = {
+// Localised copy for the member-approval link (adding someone to an account).
+const APPROVE_COPY = {
   en: {
-    subject: "Add a family member — Kempen Cricket Club",
-    body: (url) =>
-      "Hi,\n\nYou asked to add a family member to your Kempen Cricket Club account. " +
-      "Open the link below to fill in their details (it expires in 24 hours):\n\n" +
-      url + "\n\nIf you didn't request this, you can ignore this email.\n\nKempen Cricket Club"
+    subject: "Approve a new member on your account — Kempen Cricket Club",
+    body: (name, url) =>
+      "Hi,\n\n" + (name ? name + " was" : "Someone was") +
+      " added to your Kempen Cricket Club account. To confirm and activate this " +
+      "membership, open the link below (it expires in 24 hours):\n\n" +
+      url + "\n\nIf you didn't expect this, you can ignore this email — the member " +
+      "stays inactive until approved.\n\nKempen Cricket Club"
   },
   nl: {
-    subject: "Gezinslid toevoegen — Kempen Cricket Club",
-    body: (url) =>
-      "Hallo,\n\nJe hebt gevraagd om een gezinslid toe te voegen aan je Kempen Cricket Club-account. " +
-      "Open onderstaande link om hun gegevens in te vullen (verloopt na 24 uur):\n\n" +
-      url + "\n\nHeb je dit niet aangevraagd, dan mag je deze e-mail negeren.\n\nKempen Cricket Club"
+    subject: "Nieuw lid goedkeuren op je account — Kempen Cricket Club",
+    body: (name, url) =>
+      "Hallo,\n\n" + (name ? name + " werd" : "Er werd iemand") +
+      " toegevoegd aan je Kempen Cricket Club-account. Om dit lidmaatschap te " +
+      "bevestigen en te activeren, open onderstaande link (verloopt na 24 uur):\n\n" +
+      url + "\n\nVerwachtte je dit niet, negeer deze e-mail dan — het lid blijft " +
+      "inactief tot het is goedgekeurd.\n\nKempen Cricket Club"
   }
 };
 
-/** Email the add-member magic link. Best-effort; returns true/false. */
-async function sendMemberLink({ to, url, lang }) {
+/** Email the member-approval link to the account owner. Best-effort. */
+async function sendApprovalLink({ to, name, url, lang }) {
   let t;
   try { t = await getTransport(); } catch (err) {
-    console.error("mail: member-link transport failed:", err && err.message);
+    console.error("mail: approval-link transport failed:", err && err.message);
     return false;
   }
   if (!t) return false;
-  const copy = LINK_COPY[lang] || LINK_COPY.en;
+  const copy = APPROVE_COPY[lang] || APPROVE_COPY.en;
   try {
     await t.sendMail({
       from: process.env.SMTP_FROM || "Kempen Cricket Club <contact@kempencricket.be>",
-      to, subject: copy.subject, text: copy.body(url)
+      to, subject: copy.subject, text: copy.body(name, url)
     });
     return true;
   } catch (err) {
-    console.error("mail: member-link sendMail failed:", err && err.code, err && err.message);
+    console.error("mail: approval-link sendMail failed:", err && err.code, err && err.message);
     return false;
   }
 }
 
-module.exports = { sendConfirmation, sendAdminNotification, sendMemberLink };
+module.exports = { sendConfirmation, sendAdminNotification, sendApprovalLink };

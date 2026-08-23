@@ -186,21 +186,22 @@ function verifyUnsubToken(email, token) {
 }
 
 /**
- * Sign a time-limited magic-link token for an email (add-member flow).
- * Format: base64url(exp).hmac(email|exp). TTL from MEMBER_LINK_TTL_MIN (default 1440).
+ * Sign a time-limited approval token for a pending member. Bound to both the
+ * account email and the member id, so a link approves exactly one person.
+ * Format: base64url(exp).hmac(email|memberId|exp). TTL from MEMBER_LINK_TTL_MIN.
  */
-function signMemberLinkToken(email, ttlMinutes) {
+function signMemberApproveToken(email, memberId, ttlMinutes) {
   const secret = process.env.JWT_SECRET;
   if (!secret) return null;
   const ttl = Number(ttlMinutes || process.env.MEMBER_LINK_TTL_MIN || 1440);
   const exp = Math.floor(Date.now() / 1000) + ttl * 60;
   const e = String(email).trim().toLowerCase();
-  const sig = crypto.createHmac("sha256", secret).update(`${e}|${exp}`).digest("base64url");
+  const sig = crypto.createHmac("sha256", secret).update(`${e}|${memberId}|${exp}`).digest("base64url");
   return `${Buffer.from(String(exp)).toString("base64url")}.${sig}`;
 }
 
-/** Verify a magic-link token: checks the signature and that it hasn't expired. */
-function verifyMemberLinkToken(email, token) {
+/** Verify an approval token against the email + member id, and check expiry. */
+function verifyMemberApproveToken(email, memberId, token) {
   const secret = process.env.JWT_SECRET;
   if (!secret || !token) return false;
   const parts = String(token).split(".");
@@ -208,7 +209,7 @@ function verifyMemberLinkToken(email, token) {
   const exp = parseInt(Buffer.from(parts[0], "base64url").toString("utf8"), 10);
   if (!exp || Math.floor(Date.now() / 1000) > exp) return false;
   const e = String(email).trim().toLowerCase();
-  const expected = crypto.createHmac("sha256", secret).update(`${e}|${exp}`).digest("base64url");
+  const expected = crypto.createHmac("sha256", secret).update(`${e}|${memberId}|${exp}`).digest("base64url");
   return safeEqual(parts[1], expected);
 }
 
@@ -226,6 +227,6 @@ module.exports = {
   requireJwt, signToken, checkClientCredentials, readJson,
   str, bool, isEmail, dateOrNull, langOf, normalizeCategory,
   verifyTurnstile, signUnsubToken, verifyUnsubToken,
-  signMemberLinkToken, verifyMemberLinkToken,
+  signMemberApproveToken, verifyMemberApproveToken,
   ok, badRequest, conflict, captchaFailed
 };

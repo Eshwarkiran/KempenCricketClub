@@ -133,7 +133,7 @@ async function findMember(accountId, firstName, lastName, dob) {
     .input("last_name", sql.NVarChar(100), lastName)
     .input("dob", sql.Date, dob || null)
     .query(`
-      SELECT TOP 1 id, member_type, is_primary
+      SELECT TOP 1 id, member_type, is_primary, status
       FROM dbo.members
       WHERE account_id = @account_id
         AND first_name = @first_name AND last_name = @last_name
@@ -157,7 +157,7 @@ async function findMemberByName(accountId, firstName, lastName, dob) {
     .input("last_name", sql.NVarChar(100), lastName)
     .input("dob", sql.Date, dob || null)
     .query(`
-      SELECT TOP 1 id, member_type, is_primary, dob
+      SELECT TOP 1 id, member_type, is_primary, dob, status
       FROM dbo.members
       WHERE account_id = @account_id
         AND first_name = @first_name AND last_name = @last_name
@@ -208,21 +208,54 @@ async function insertMember(m) {
     .input("account_id", sql.Int, m.accountId)
     .input("is_primary", sql.Bit, m.isPrimary ? 1 : 0)
     .input("member_type", sql.VarChar(10), m.memberType)
-    .input("source", sql.VarChar(10), m.source);
+    .input("source", sql.VarChar(10), m.source)
+    .input("status", sql.VarChar(10), m.status || "active");
   const r = await req.query(`
     INSERT INTO dbo.members
-      (account_id, is_primary, member_type, source, category, first_name, last_name,
+      (account_id, is_primary, member_type, source, status, category, first_name, last_name,
        dob, gender, nationality, birthplace, national_register_no, emergency_contact,
        medical_notes, playing_role, batting_hand, bowling_style, experience,
        previous_club, prior_federation, student_id, heard_via, notes)
     OUTPUT inserted.id AS id
     VALUES
-      (@account_id, @is_primary, @member_type, @source, @category, @first_name, @last_name,
+      (@account_id, @is_primary, @member_type, @source, @status, @category, @first_name, @last_name,
        @dob, @gender, @nationality, @birthplace, @national_register_no, @emergency_contact,
        @medical_notes, @playing_role, @batting_hand, @bowling_style, @experience,
        @previous_club, @prior_federation, @student_id, @heard_via, @notes);
   `);
   return r.recordset[0].id;
+}
+
+/**
+ * Activate a pending member. member_type is derived from the source form
+ * (register -> regular, otherwise trial), per the requirement. Returns the
+ * activated row {id, account_id, first_name, last_name} or null if not found /
+ * not pending (idempotent — a second click is a no-op).
+ */
+async function activateMember(memberId, accountId) {
+  const pool = await getPool();
+  const r = await pool
+    .request()
+    .input("id", sql.Int, memberId)
+    .input("account_id", sql.Int, accountId)
+    .query(`
+      UPDATE dbo.members
+      SET status = 'active',
+          member_type = CASE WHEN source = 'register' THEN 'regular' ELSE 'trial' END
+      OUTPUT inserted.id, inserted.account_id, inserted.first_name, inserted.last_name
+      WHERE id = @id AND account_id = @account_id AND status = 'pending';
+    `);
+  return r.recordset[0] || null;
+}
+
+/** Fetch a member's account + name/status (for the approval landing message). */
+async function getMemberBrief(memberId) {
+  const pool = await getPool();
+  const r = await pool
+    .request()
+    .input("id", sql.Int, memberId)
+    .query("SELECT TOP 1 id, account_id, first_name, last_name, status FROM dbo.members WHERE id = @id");
+  return r.recordset[0] || null;
 }
 
 /** Upgrade a member to regular (trial -> regular) and refresh their details. */
@@ -233,6 +266,7 @@ async function upgradeMemberToRegular(id, m) {
     .query(`
       UPDATE dbo.members SET
         member_type          = 'regular',
+        status               = 'active',
         source               = 'register',
         category             = COALESCE(@category, category),
         dob                  = COALESCE(@dob, dob),
@@ -273,5 +307,5 @@ async function subscribeEmail(email, lang) {
 module.exports = {
   sql, getPool, emailExists,
   findOrCreateAccount, findAccountByEmail, findMember, findMemberByName, accountHasMembers,
-  insertMember, upgradeMemberToRegular, subscribeEmail
+  insertMember, upgradeMemberToRegular, activateMember, getMemberBrief, subscribeEmail
 };

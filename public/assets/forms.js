@@ -140,8 +140,7 @@
 
   // Endpoints protected by Turnstile.
   var CAPTCHA_ENDPOINTS = {
-    "/api/join": true, "/api/subscribe": true, "/api/contact": true,
-    "/api/add-member/request-link": true, "/api/add-member": true
+    "/api/join": true, "/api/subscribe": true, "/api/contact": true
   };
 
   loadTurnstile();
