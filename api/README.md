@@ -15,7 +15,8 @@ Static Web Apps from this `api/` folder (Node.js v4 programming model).
 
 ### Account + member model
 
-Members live in two tables (see `sql/migrations/2026-07_account_member/`):
+Members live in two tables (migration scripts are kept out of the repo — ask a
+maintainer for the `account_member` SQL):
 `account` (one row per email — shared phone/address + household consents) and
 `members` (one row per person, `account_id` FK, `is_primary` marks the account
 holder). Members also carry a `status` (`active` / `pending`). This lets a

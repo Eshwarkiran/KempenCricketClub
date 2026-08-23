@@ -16,3 +16,6 @@ npm-debug.log*
 
 #DB
 db/
+# DB migration scripts — kept local, not in the repo
+sql/
+*.sql
