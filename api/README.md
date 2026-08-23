@@ -5,22 +5,40 @@ Static Web Apps from this `api/` folder (Node.js v4 programming model).
 
 | Endpoint         | Form            | Table            | Notes                          |
 |------------------|-----------------|------------------|--------------------------------|
-| `POST /api/join`       | /join (3 free sessions) | `dbo.members`  | `member_type='trial'`; captcha; auto-subscribes + confirmation email |
-| `POST /api/register`   | /register       | `dbo.members`    | `member_type='regular'`; auto-subscribes + confirmation email |
-| `POST /api/contact`    | /contact        | `dbo.contact`    | honeypot + captcha             |
-| `POST /api/subscribe`  | footer signup   | `dbo.subscriber` | captcha; re-subscribe allowed after unsubscribe |
-| `POST /api/unsubscribe`| /unsubscribe    | `dbo.subscriber` | sets `unsubscribed_at`; always 200 |
-| `POST /api/token`      | (auth)          | —                | issues a short-lived JWT       |
+| `POST /api/join`         | /join (3 free sessions) | `account`+`members` | `member_type='trial'`; captcha; auto-subscribes + confirmation + admin email |
+| `POST /api/register`     | /register       | `account`+`members` | `member_type='regular'`; trial→regular upgrade; auto-subscribes + confirmation + admin email |
+| `POST /api/add-member/request-link` | /add-member | `account` | emails a magic link to add a family member; captcha; always 200 |
+| `POST /api/add-member`   | /add-member (link) | `members`     | adds a member to an account; magic-link token + captcha; admin email |
+| `POST /api/contact`      | /contact        | `dbo.contact`    | honeypot + captcha             |
+| `POST /api/subscribe`    | footer signup   | `dbo.subscriber` | captcha; re-subscribe allowed after unsubscribe |
+| `POST /api/unsubscribe`  | /unsubscribe    | `dbo.subscriber` | sets `unsubscribed_at`; always 200 |
+| `POST /api/token`        | (auth)          | —                | issues a short-lived JWT       |
+
+### Account + member model
+
+Members live in two tables (see `sql/migrations/2026-07_account_member/`):
+`account` (one row per email — shared phone/address + household consents) and
+`members` (one row per person, `account_id` FK, `is_primary` marks the account
+holder). This lets a household register several people under the same email and
+phone. **Join/register** find-or-create the account by email, then insert (or,
+for trial→regular, upgrade) the person. **Add-member** attaches an extra person
+to an existing account after the requester proves control of the account email
+via a signed magic link.
 
 ### Behaviour added on top of the basic inserts
 
-- **Duplicate email → 409.** Join and Contact reject an email that already
-  exists in their table; Subscribe rejects an email that is *currently* subscribed
-  (a previously-unsubscribed address may re-subscribe). Register rejects only an
-  email that is already a **regular** member — a trial member (from /join) may
-  register as a regular member with the same email. The response is
-  `409 { code: "email_exists" }`; the frontend shows a popup instead of the
-  thank-you page.
+- **Duplicate person → 409.** Within an account, a person is unique on
+  `(first_name, last_name, dob)`. Register rejects only an email that is already a
+  **regular** member (a trial member may register as regular — upgraded in place);
+  add-member rejects a person already on the account. Contact/subscribe keep their
+  own email rules. The response is `409 { code: "email_exists" }`.
+- **Admin notifications.** Join, register and add-member email
+  `ADMIN_EMAIL` (default `membership@kempencricket.be`) with the new signup's
+  details. Best-effort.
+- **Add-member magic link.** `/api/add-member/request-link` emails a signed,
+  time-limited link (`MEMBER_LINK_TTL_MIN`, default 24h) built from `SITE_URL`.
+  `/api/add-member` verifies that token before inserting. Both are best-effort on
+  email and never reveal whether an account exists.
 - **Category normalisation.** Free-text categories ("Adult (17+)", "Jeugd (≤16)",
   "Thomas More student", …) are stored as `adult` / `junior` / `supporter` /
   `student`.

@@ -7,7 +7,7 @@ export default defineConfig({
   integrations: [
     sitemap({
       // keep noindex/utility pages out of the sitemap
-      filter: (page) => !/\/(404|thank-you|register|unsubscribe)\/$/.test(page),
+      filter: (page) => !/\/(404|thank-you|register|unsubscribe|add-member)\/$/.test(page),
     }),
   ],
   build: { format: 'directory' },

@@ -1,11 +1,14 @@
 "use strict";
 const { app } = require("@azure/functions");
-const { sql, getPool, memberExists } = require("../shared/db");
+const {
+  findOrCreateAccount, findMember, accountHasMembers,
+  insertMember, upgradeMemberToRegular, subscribeEmail
+} = require("../shared/db");
 const {
   requireJwt, readJson, str, bool, isEmail, dateOrNull, langOf, normalizeCategory,
   ok, badRequest, conflict
 } = require("../shared/http");
-const { sendConfirmation } = require("../shared/mail");
+const { sendConfirmation, sendAdminNotification } = require("../shared/mail");
 
 app.http("register", {
   route: "register",
@@ -25,98 +28,79 @@ app.http("register", {
     }
 
     const email = str(body.email, 255);
+    const firstName = str(body.firstName, 100);
+    const lastName = str(body.lastName, 100);
+    const dob = dateOrNull(body.dob);
+    const lang = langOf(body);
+
+    // Person fields shared by the insert and the trial->regular upgrade.
+    const fields = {
+      category: normalizeCategory(body.category),
+      firstName, lastName, dob,
+      gender: str(body.gender, 30),
+      nationality: str(body.nationality, 100),
+      birthplace: str(body.birthplace, 100),
+      nationalRegisterNo: str(body.nationalRegisterNo, 20),
+      emergency: str(body.emergency, 255),
+      medical: str(body.medical, 4000),
+      role: str(body.role, 50),
+      battingHand: str(body.battingHand, 30),
+      bowlingStyle: str(body.bowlingStyle, 50),
+      experience: str(body.experience, 4000),
+      previousClub: str(body.previousClub, 150),
+      priorFederation: str(body.priorFederation, 150),
+      studentId: str(body.studentId, 50),
+      heardVia: str(body.heardVia, 100)
+    };
 
     try {
-      // Reject only if already a REGULAR member. A trial member (from /join)
-      // is allowed to register as a regular member with the same email.
-      if (await memberExists(email, "regular")) {
+      const accountId = await findOrCreateAccount({
+        email,
+        phone: str(body.phone, 50),
+        address: str(body.address, 255),
+        city: str(body.city, 100),
+        lang,
+        consent: {
+          gdpr: bool(body.agreeGdpr), rules: bool(body.agreeRules),
+          house: bool(body.agreeHouse), photo: bool(body.agreePhoto),
+          guardian: bool(body.agreeGuardian)
+        }
+      });
+
+      const existing = await findMember(accountId, firstName, lastName, dob);
+      if (existing && existing.member_type === "regular") {
         return conflict("This email is already registered.");
       }
 
-      const pool = await getPool();
-      await pool
-        .request()
-        .input("member_type", sql.VarChar(10), "regular") // register = regular member
-        .input("source", sql.VarChar(10), "register")
-        .input("category", sql.NVarChar(50), normalizeCategory(body.category))
-        .input("first_name", sql.NVarChar(100), str(body.firstName, 100))
-        .input("last_name", sql.NVarChar(100), str(body.lastName, 100))
-        .input("email", sql.NVarChar(255), email)
-        .input("phone", sql.NVarChar(50), str(body.phone, 50))
-        .input("address", sql.NVarChar(255), str(body.address, 255))
-        .input("city", sql.NVarChar(100), str(body.city, 100))
-        .input("dob", sql.Date, dateOrNull(body.dob))
-        .input("gender", sql.NVarChar(30), str(body.gender, 30))
-        .input("nationality", sql.NVarChar(100), str(body.nationality, 100))
-        .input("birthplace", sql.NVarChar(100), str(body.birthplace, 100))
-        .input("national_register_no", sql.NVarChar(20), str(body.nationalRegisterNo, 20))
-        .input("emergency_contact", sql.NVarChar(255), str(body.emergency, 255))
-        .input("medical_notes", sql.NVarChar(sql.MAX), str(body.medical, 4000))
-        .input("playing_role", sql.NVarChar(50), str(body.role, 50))
-        .input("batting_hand", sql.NVarChar(30), str(body.battingHand, 30))
-        .input("bowling_style", sql.NVarChar(50), str(body.bowlingStyle, 50))
-        .input("experience", sql.NVarChar(sql.MAX), str(body.experience, 4000))
-        .input("previous_club", sql.NVarChar(150), str(body.previousClub, 150))
-        .input("prior_federation", sql.NVarChar(150), str(body.priorFederation, 150))
-        .input("guardian_name", sql.NVarChar(150), str(body.guardianName, 150))
-        .input("guardian_rel", sql.NVarChar(50), str(body.guardianRel, 50))
-        .input("guardian_phone", sql.NVarChar(50), str(body.guardianPhone, 50))
-        .input("guardian_email", sql.NVarChar(255), str(body.guardianEmail, 255))
-        .input("student_id", sql.NVarChar(50), str(body.studentId, 50))
-        .input("heard_via", sql.NVarChar(100), str(body.heardVia, 100))
-        .input("consent_gdpr", sql.Bit, bool(body.agreeGdpr))
-        .input("agree_rules", sql.Bit, bool(body.agreeRules))
-        .input("agree_house", sql.Bit, bool(body.agreeHouse))
-        .input("agree_photo", sql.Bit, bool(body.agreePhoto))
-        .input("agree_guardian", sql.Bit, bool(body.agreeGuardian))
-        .input("lang", sql.Char(2), langOf(body))
-        .query(`
-          INSERT INTO dbo.members
-            (member_type, source, category, first_name, last_name, email, phone,
-             address, city, dob, gender, nationality, birthplace,
-             national_register_no, emergency_contact, medical_notes,
-             playing_role, batting_hand, bowling_style, experience,
-             previous_club, prior_federation,
-             guardian_name, guardian_rel, guardian_phone, guardian_email,
-             student_id, heard_via,
-             consent_gdpr, agree_rules, agree_house, agree_photo, agree_guardian, lang)
-          VALUES
-            (@member_type, @source, @category, @first_name, @last_name, @email, @phone,
-             @address, @city, @dob, @gender, @nationality, @birthplace,
-             @national_register_no, @emergency_contact, @medical_notes,
-             @playing_role, @batting_hand, @bowling_style, @experience,
-             @previous_club, @prior_federation,
-             @guardian_name, @guardian_rel, @guardian_phone, @guardian_email,
-             @student_id, @heard_via,
-             @consent_gdpr, @agree_rules, @agree_house, @agree_photo, @agree_guardian, @lang);
-        `);
-
-      // Auto-subscribe to the newsletter (idempotent). Best-effort.
-      try {
-        await pool
-          .request()
-          .input("email", sql.NVarChar(255), email.toLowerCase())
-          .input("lang", sql.Char(2), langOf(body))
-          .query(`
-            MERGE dbo.subscriber AS t
-            USING (SELECT @email AS email) AS s
-            ON t.email = s.email
-            WHEN MATCHED THEN UPDATE SET unsubscribed_at = NULL, lang = @lang
-            WHEN NOT MATCHED THEN INSERT (email, lang) VALUES (@email, @lang);
-          `);
-      } catch (subErr) {
-        context.warn("register auto-subscribe failed", subErr);
+      if (existing && existing.member_type === "trial") {
+        // Trial member registering as a regular member — upgrade in place.
+        await upgradeMemberToRegular(existing.id, fields);
+      } else {
+        const isPrimary = !(await accountHasMembers(accountId));
+        await insertMember({ accountId, isPrimary, memberType: "regular", source: "register", ...fields });
       }
 
-      // Confirmation email. Best-effort — never blocks the response.
-      const sent = await sendConfirmation({
-        to: email, name: str(body.firstName, 100), kind: "register", lang: langOf(body)
-      });
+      // Auto-subscribe (best-effort).
+      try { await subscribeEmail(email, lang); }
+      catch (subErr) { context.warn("register auto-subscribe failed", subErr); }
+
+      // Confirmation to the applicant (best-effort).
+      const sent = await sendConfirmation({ to: email, name: firstName, kind: "register", lang });
       if (!sent) context.warn("register confirmation email not sent (SMTP off or error)");
+
+      // Notify the club (best-effort).
+      await sendAdminNotification({
+        kind: "register",
+        details: {
+          name: `${firstName} ${lastName}`, email, phone: str(body.phone, 50),
+          category: fields.category, dob, city: str(body.city, 100),
+          upgraded_from_trial: existing && existing.member_type === "trial" ? "yes" : "no"
+        }
+      });
 
       return ok;
     } catch (err) {
-      context.error("register insert failed", err);
+      context.error("register failed", err);
       return { status: 500, jsonBody: { success: false, error: "Database error" } };
     }
   }

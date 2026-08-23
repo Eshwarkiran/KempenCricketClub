@@ -1,0 +1,51 @@
+<section class="page-hero">
+  <div class="wrap inner">
+    <span class="crumb"><a href="/">Home</a> / Add a family member</span>
+    <span class="eyebrow" style="display:block;margin-top:14px">Family registration</span>
+    <h1>Add a family member</h1>
+    <p class="sub">Already a member? Add your children or family to the same account — no need to re-enter your contact details.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+
+    <!-- STEP 1: request a secure link -->
+    <div id="request-section" class="reveal" style="max-width:520px">
+      <span class="eyebrow">Step 1</span>
+      <h2 class="big" style="font-size:30px">Get your secure link</h2>
+      <p class="body">Enter the email address on your account. We'll send you a link (valid for 24 hours) to add a family member.</p>
+      <form class="form" data-endpoint="/api/add-member/request-link" aria-label="Request add-member link">
+        <div class="field"><label>Your account email *</label><input type="email" name="email" required autocomplete="email"></div>
+        <button class="btn btn--primary" type="submit">Send me the link</button>
+      </form>
+    </div>
+
+    <!-- STEP 2: shown when opened from the emailed link (email + token in the URL) -->
+    <div id="add-section" class="reveal" style="max-width:640px; display:none">
+      <span class="eyebrow">Step 2</span>
+      <h2 class="big" style="font-size:30px">Their details</h2>
+      <p class="body">Fill in the details of the family member you'd like to add.</p>
+      <form class="form" data-endpoint="/api/add-member" aria-label="Add a family member">
+        <input type="hidden" name="email">
+        <input type="hidden" name="token">
+        <div class="frow">
+          <div class="field"><label>First name *</label><input type="text" name="firstName" required></div>
+          <div class="field"><label>Last name *</label><input type="text" name="lastName" required></div>
+        </div>
+        <div class="field"><label>Date of birth</label><input type="date" name="dob"></div>
+        <div class="field"><label>Category</label>
+          <div class="pills pills--3">
+            <div class="pill"><input type="radio" id="am-junior" name="category" value="Junior" checked><label for="am-junior">Junior <small>&le;16</small></label></div>
+            <div class="pill"><input type="radio" id="am-adult" name="category" value="Adult"><label for="am-adult">Adult <small>17+</small></label></div>
+            <div class="pill"><input type="radio" id="am-support" name="category" value="Supporter"><label for="am-support">Supporter</label></div>
+          </div>
+        </div>
+        <div class="field"><label>Gender</label><input type="text" name="gender"></div>
+        <div class="field"><label>Medical notes (allergies, conditions)</label><textarea name="medical"></textarea></div>
+        <button class="btn btn--primary" type="submit">Add member</button>
+      </form>
+    </div>
+
+  </div>
+</section>

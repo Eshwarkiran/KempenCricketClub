@@ -185,6 +185,33 @@ function verifyUnsubToken(email, token) {
   return safeEqual(String(token), expected);
 }
 
+/**
+ * Sign a time-limited magic-link token for an email (add-member flow).
+ * Format: base64url(exp).hmac(email|exp). TTL from MEMBER_LINK_TTL_MIN (default 1440).
+ */
+function signMemberLinkToken(email, ttlMinutes) {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) return null;
+  const ttl = Number(ttlMinutes || process.env.MEMBER_LINK_TTL_MIN || 1440);
+  const exp = Math.floor(Date.now() / 1000) + ttl * 60;
+  const e = String(email).trim().toLowerCase();
+  const sig = crypto.createHmac("sha256", secret).update(`${e}|${exp}`).digest("base64url");
+  return `${Buffer.from(String(exp)).toString("base64url")}.${sig}`;
+}
+
+/** Verify a magic-link token: checks the signature and that it hasn't expired. */
+function verifyMemberLinkToken(email, token) {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || !token) return false;
+  const parts = String(token).split(".");
+  if (parts.length !== 2) return false;
+  const exp = parseInt(Buffer.from(parts[0], "base64url").toString("utf8"), 10);
+  if (!exp || Math.floor(Date.now() / 1000) > exp) return false;
+  const e = String(email).trim().toLowerCase();
+  const expected = crypto.createHmac("sha256", secret).update(`${e}|${exp}`).digest("base64url");
+  return safeEqual(parts[1], expected);
+}
+
 /** 409 — used when an email already exists. Carries a machine-readable code. */
 function conflict(message) {
   return { status: 409, jsonBody: { success: false, error: message, code: "email_exists" } };
@@ -199,5 +226,6 @@ module.exports = {
   requireJwt, signToken, checkClientCredentials, readJson,
   str, bool, isEmail, dateOrNull, langOf, normalizeCategory,
   verifyTurnstile, signUnsubToken, verifyUnsubToken,
+  signMemberLinkToken, verifyMemberLinkToken,
   ok, badRequest, conflict, captchaFailed
 };

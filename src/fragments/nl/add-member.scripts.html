@@ -1,0 +1,22 @@
+<script>
+(function () {
+  document.addEventListener("DOMContentLoaded", function () {
+    var params = new URLSearchParams(location.search);
+    var email = params.get("email"), token = params.get("t");
+    var reqSec = document.getElementById("request-section");
+    var addSec = document.getElementById("add-section");
+    if (email && token) {
+      if (reqSec) reqSec.style.display = "none";
+      if (addSec) {
+        addSec.style.display = "block";
+        var f = addSec.querySelector("form");
+        f.querySelector('input[name="email"]').value = email;
+        f.querySelector('input[name="token"]').value = token;
+      }
+    } else {
+      if (addSec) addSec.style.display = "none";
+      if (reqSec) reqSec.style.display = "block";
+    }
+  });
+})();
+</script>

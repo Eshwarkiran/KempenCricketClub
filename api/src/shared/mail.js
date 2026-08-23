@@ -185,4 +185,81 @@ async function sendConfirmation({ to, name, kind, lang }) {
   }
 }
 
-module.exports = { sendConfirmation };
+/**
+ * Notify the club of a new signup. Sends to ADMIN_EMAIL (default membership@).
+ * `kind` is join | register | added. `details` is a flat object of field -> value.
+ * Best-effort — returns true/false, never throws.
+ */
+async function sendAdminNotification({ kind, details }) {
+  let t;
+  try {
+    t = await getTransport();
+  } catch (err) {
+    console.error("mail: admin transport creation failed:", err && err.message);
+    return false;
+  }
+  if (!t) return false;
+
+  const to = process.env.ADMIN_EMAIL || "membership@kempencricket.be";
+  const labels = { join: "trial signup (join)", register: "member registration", added: "added family member" };
+  const heading = labels[kind] || kind;
+
+  const lines = Object.entries(details || {})
+    .filter(([, v]) => v !== null && v !== undefined && String(v).trim() !== "")
+    .map(([k, v]) => `${k}: ${v}`)
+    .join("\n");
+
+  try {
+    await t.sendMail({
+      from: process.env.SMTP_FROM || "Kempen Cricket Club <contact@kempencricket.be>",
+      to,
+      subject: `New ${heading} — ${details.name || details.email || "KCC"}`,
+      text: `A new ${heading} was submitted on the website.\n\n${lines}\n`
+    });
+    return true;
+  } catch (err) {
+    console.error("mail: admin sendMail failed:", err && err.code, err && err.message);
+    return false;
+  }
+}
+
+// Localised copy for the add-member magic link.
+const LINK_COPY = {
+  en: {
+    subject: "Add a family member — Kempen Cricket Club",
+    body: (url) =>
+      "Hi,\n\nYou asked to add a family member to your Kempen Cricket Club account. " +
+      "Open the link below to fill in their details (it expires in 24 hours):\n\n" +
+      url + "\n\nIf you didn't request this, you can ignore this email.\n\nKempen Cricket Club"
+  },
+  nl: {
+    subject: "Gezinslid toevoegen — Kempen Cricket Club",
+    body: (url) =>
+      "Hallo,\n\nJe hebt gevraagd om een gezinslid toe te voegen aan je Kempen Cricket Club-account. " +
+      "Open onderstaande link om hun gegevens in te vullen (verloopt na 24 uur):\n\n" +
+      url + "\n\nHeb je dit niet aangevraagd, dan mag je deze e-mail negeren.\n\nKempen Cricket Club"
+  }
+};
+
+/** Email the add-member magic link. Best-effort; returns true/false. */
+async function sendMemberLink({ to, url, lang }) {
+  let t;
+  try { t = await getTransport(); } catch (err) {
+    console.error("mail: member-link transport failed:", err && err.message);
+    return false;
+  }
+  if (!t) return false;
+  const copy = LINK_COPY[lang] || LINK_COPY.en;
+  try {
+    await t.sendMail({
+      from: process.env.SMTP_FROM || "Kempen Cricket Club <contact@kempencricket.be>",
+      to, subject: copy.subject, text: copy.body(url)
+    });
+    return true;
+  } catch (err) {
+    console.error("mail: member-link sendMail failed:", err && err.code, err && err.message);
+    return false;
+  }
+}
+
+module.exports = { sendConfirmation, sendAdminNotification, sendMemberLink };

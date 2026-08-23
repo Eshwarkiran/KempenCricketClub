@@ -1,0 +1,40 @@
+meta {
+  name: Add Member — Request Link
+  type: http
+  seq: 9
+}
+
+post {
+  url: {{baseUrl}}/api/add-member/request-link
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "test@example.com",
+    "turnstileToken": "",
+    "lang": "en"
+  }
+}
+
+tests {
+  test("200 OK", function () {
+    expect(res.getStatus()).to.equal(200);
+  });
+}
+
+docs {
+  Emails a signed, time-limited magic link to add a family member. Always returns
+  200 (never reveals whether the email has an account); the email is only sent
+  when an account exists. Requires JWT + Turnstile (skipped when TURNSTILE_SECRET
+  is unset).
+
+  To get a usable token for the next request without email, generate one:
+      node -e 'const h=require("./api/src/shared/http.js");console.log(h.signMemberLinkToken("test@example.com"))'
+  (with JWT_SECRET set), then paste it into the Add Member request's `token`.
+}
