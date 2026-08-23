@@ -142,6 +142,31 @@ async function findMember(accountId, firstName, lastName, dob) {
   return r.recordset[0] || null;
 }
 
+/**
+ * Find a person for registration/upgrade. Matches the same name where the dob
+ * equals the given one OR is NULL — because a trial member (from /join) has no
+ * dob yet, so an exact-dob match would miss them and create a duplicate. Prefers
+ * an exact dob match over a null-dob (trial) row. Returns {id, member_type, is_primary, dob} or null.
+ */
+async function findMemberByName(accountId, firstName, lastName, dob) {
+  const pool = await getPool();
+  const r = await pool
+    .request()
+    .input("account_id", sql.Int, accountId)
+    .input("first_name", sql.NVarChar(100), firstName)
+    .input("last_name", sql.NVarChar(100), lastName)
+    .input("dob", sql.Date, dob || null)
+    .query(`
+      SELECT TOP 1 id, member_type, is_primary, dob
+      FROM dbo.members
+      WHERE account_id = @account_id
+        AND first_name = @first_name AND last_name = @last_name
+        AND (dob = @dob OR dob IS NULL)
+      ORDER BY CASE WHEN dob = @dob THEN 0 ELSE 1 END, id
+    `);
+  return r.recordset[0] || null;
+}
+
 /** True if the account already has at least one member. */
 async function accountHasMembers(accountId) {
   const pool = await getPool();
@@ -247,6 +272,6 @@ async function subscribeEmail(email, lang) {
 
 module.exports = {
   sql, getPool, emailExists,
-  findOrCreateAccount, findAccountByEmail, findMember, accountHasMembers,
+  findOrCreateAccount, findAccountByEmail, findMember, findMemberByName, accountHasMembers,
   insertMember, upgradeMemberToRegular, subscribeEmail
 };

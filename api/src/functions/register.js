@@ -1,7 +1,7 @@
 "use strict";
 const { app } = require("@azure/functions");
 const {
-  findOrCreateAccount, findMember, accountHasMembers,
+  findOrCreateAccount, findMemberByName, accountHasMembers,
   insertMember, upgradeMemberToRegular, subscribeEmail
 } = require("../shared/db");
 const {
@@ -67,13 +67,15 @@ app.http("register", {
         }
       });
 
-      const existing = await findMember(accountId, firstName, lastName, dob);
+      // Matches an existing regular row, or a trial row that has no dob yet
+      // (join doesn't collect dob), so the upgrade lands on the same person.
+      const existing = await findMemberByName(accountId, firstName, lastName, dob);
       if (existing && existing.member_type === "regular") {
         return conflict("This email is already registered.");
       }
 
-      if (existing && existing.member_type === "trial") {
-        // Trial member registering as a regular member — upgrade in place.
+      if (existing && (existing.member_type === "trial" || existing.member_type === "supporter")) {
+        // Trial (or supporter) member registering as a regular member — upgrade in place.
         await upgradeMemberToRegular(existing.id, fields);
       } else {
         const isPrimary = !(await accountHasMembers(accountId));
@@ -94,7 +96,7 @@ app.http("register", {
         details: {
           name: `${firstName} ${lastName}`, email, phone: str(body.phone, 50),
           category: fields.category, dob, city: str(body.city, 100),
-          upgraded_from_trial: existing && existing.member_type === "trial" ? "yes" : "no"
+          upgraded_from_trial: existing ? "yes" : "no"
         }
       });
 
