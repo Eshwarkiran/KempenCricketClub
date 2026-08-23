@@ -2,6 +2,7 @@
 const { app } = require("@azure/functions");
 const { findAccountByEmail, activateMember, getMemberBrief } = require("../shared/db");
 const { str, isEmail, verifyMemberApproveToken, brandedPage } = require("../shared/http");
+const { sendAdminNotification } = require("../shared/mail");
 
 const page = (title, message) => brandedPage({ title, message, eyebrow: "Membership" });
 
@@ -42,6 +43,19 @@ app.http("verifyMember", {
       }
 
       const name = `${brief.first_name} ${brief.last_name}`;
+
+      // Notify the club — only on the actual pending->active transition (not on
+      // a repeat click). Best-effort; never blocks the response.
+      if (activated) {
+        await sendAdminNotification({
+          kind: "approved",
+          details: {
+            name, account_email: email,
+            member_type: activated.member_type, category: activated.category,
+            status: "approved (now active)"
+          }
+        });
+      }
       return {
         status: 200, headers: htmlHeaders,
         body: page("Member approved", `${name} is now an active member of your Kempen Cricket Club account.`)
