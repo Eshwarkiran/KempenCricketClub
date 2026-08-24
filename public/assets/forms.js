@@ -137,14 +137,27 @@
   var thankYou = lang === "nl" ? "/nl/thank-you" : "/thank-you";
   var T = {
     en: {
-      sending: "Sending…",
+      /* Progress stages shown on the submit button. They describe what is
+         actually happening (verify -> send -> save -> waiting on a serverless
+         database resume), so the wait stays honest even when it runs long. */
+      sending: "Checking your details…",
+      steps: [
+        "Submitting your form…",
+        "Saving your details…",
+        "Almost done — this can take up to a minute…"
+      ],
       fail: "Sorry, something went wrong. Please email us at contact@kempencricket.be.",
       exists: "This email is already registered with us.",
       captcha: "We couldn't verify you're human. Please try again.",
       blocked: "Your browser or an extension is blocking our spam protection. Please turn off your ad blocker (or Brave Shields) for this site and try again."
     },
     nl: {
-      sending: "Versturen…",
+      sending: "Je gegevens controleren…",
+      steps: [
+        "Formulier versturen…",
+        "Je gegevens opslaan…",
+        "Bijna klaar — dit kan tot een minuut duren…"
+      ],
       fail: "Sorry, er ging iets mis. Mail ons op contact@kempencricket.be.",
       exists: "Dit e-mailadres is al bij ons geregistreerd.",
       captcha: "We konden niet verifiëren dat je een mens bent. Probeer opnieuw.",
@@ -167,6 +180,18 @@
       var orig = btn ? btn.textContent : "";
       if (btn) { btn.disabled = true; btn.textContent = T.sending; }
 
+      /* The database is Azure SQL serverless and auto-pauses after an hour of
+         inactivity, so the first submission of the day can take 30-60s while it
+         resumes. Step the button through the real stages of the request so the
+         wait looks intentional rather than broken. Cleared on success/failure. */
+      var waitTimers = [];
+      if (btn) {
+        T.steps.forEach(function (label, i) {
+          waitTimers.push(setTimeout(function () { btn.textContent = label; }, 3000 + i * 5000));
+        });
+      }
+      function clearWaitTimers() { waitTimers.forEach(clearTimeout); waitTimers = []; }
+
       var endpoint = form.getAttribute("data-endpoint");
       var data = Object.fromEntries(new FormData(form).entries());
       data.lang = lang;
@@ -184,8 +209,9 @@
           if (!r.ok) { throw { kind: "fail" }; }
           return r.json().catch(function () { return {}; });
         })
-        .then(function () { window.location.href = thankYou; })
+        .then(function () { clearWaitTimers(); window.location.href = thankYou; })
         .catch(function (err) {
+          clearWaitTimers();
           if (btn) { btn.disabled = false; btn.textContent = orig; }
           resetTurnstile(form);
           var kind = err && err.kind;
