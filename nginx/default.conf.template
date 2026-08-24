@@ -51,4 +51,13 @@ server {
         add_header Cache-Control "public, immutable";
         try_files $uri =404;
     }
+
+    # Hand-written scripts in /assets/ are NOT content-hashed, so a cached copy
+    # would keep running after a deploy (e.g. forms.js missing a newly protected
+    # endpoint). Always revalidate: the browser still gets a 304 when unchanged,
+    # but never serves a stale version.
+    location /assets/ {
+        add_header Cache-Control "no-cache";
+        try_files $uri =404;
+    }
 }
