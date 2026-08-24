@@ -31,8 +31,13 @@ server {
         proxy_set_header   X-Real-IP         $remote_addr;
         proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
         proxy_set_header   X-Forwarded-Proto $scheme;
+        # The Azure SQL serverless database auto-pauses after 60 min idle and can
+        # take 30-60s to resume; db.js waits up to 45s and retries. These must
+        # exceed that worst case, or nginx returns an error while the API is
+        # still working (the row lands, but the visitor sees a failure).
         proxy_connect_timeout 30s;
-        proxy_read_timeout    30s;
+        proxy_send_timeout   180s;
+        proxy_read_timeout   180s;
     }
 
     # --- Static site (Astro: build format 'directory', trailingSlash 'always') ---
