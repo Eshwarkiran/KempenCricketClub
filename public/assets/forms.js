@@ -170,6 +170,11 @@
     "/api/join": true, "/api/register": true, "/api/subscribe": true, "/api/contact": true
   };
 
+  /* Bump when this file changes in a way that matters. Lets you confirm which
+     version a browser is actually running (window.KCC.version in the console) —
+     a cached copy is otherwise indistinguishable from a code bug. */
+  window.KCC.version = "2026-08-24";
+
   loadTurnstile();
 
   document.querySelectorAll("form[data-endpoint]").forEach(function (form) {
